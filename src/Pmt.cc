@@ -6,7 +6,26 @@
 
 #include "Pmt.h"
 
-PMT::PMT(){};
+PMT::PMT(int run, int event, int board, int channel, int n_samples)
+  : fRun(run)
+  , fEvent(event)
+  , fBoard(board)
+  , fChannel(channel)
+  , fNSamples(n_samples)
+  , m_sampling_period(1.0)
+{
+  // init
+};
+
+//------------------------------------------------------------------------------
+
 PMT::~PMT(){};
 
-void PMT::printMessage(){ std::cout << "Hello there" << std::endl; }
+//------------------------------------------------------------------------------
+
+TH1D* PMT::getWaveformHist()
+{
+  TH1D *hist = new TH1D("hist", "hist", fNSamples, 0, fNSamples*m_sampling_period);
+  for(int t=0; t<fNSamples; t++){ hist->Fill( t, double(fWaveform.at(t)) ); }
+  return hist;
+};

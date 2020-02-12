@@ -12,15 +12,45 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "TH1D.h"
+
+using namespace std;
+
 class PMT
 {
+
+  typedef vector<unsigned short> Waveform_t;
+
   public:
-    PMT();
+    PMT(int run, int event, int board, int channel, int n_samples);
     ~PMT();
 
-    void printMessage();
+    // Setters
+    void setWaveform( PMT::Waveform_t waveform  ){ fWaveform = waveform; }
+
+    // Getters
+    int getRun(){ return fRun; };
+    int getEvent(){ return fEvent; };
+    int getBoard(){ return fBoard; };
+    int getChannel(){ return fChannel; }
+
+    TH1D* getWaveformHist();
+
+    // Helper to identify a PMT in list
+    bool find(int run, int event, int board, int channel ){
+      return (run==fRun && event==fEvent && board==fBoard && channel==fChannel);
+    };
 
   private:
+    int fRun;
+    int fEvent;
+    int fBoard;
+    int fChannel;
+    int fNSamples;
+
+    double m_sampling_period;
+
+    PMT::Waveform_t fWaveform;
 
 };
 

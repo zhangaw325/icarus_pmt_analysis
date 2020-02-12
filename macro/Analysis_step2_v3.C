@@ -2,7 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
 
 #include <TMath.h>
 #include <TH1F.h>
@@ -31,7 +31,7 @@ double pulsefunc2(double* x, double * par){
     return v;
 }
 
-//single pe. waveform model: Soren JETTER et al: PMT waveform modeling at the Daya Bay experiment, Chinese Physics C 2012(36):733 
+//single pe. waveform model: Soren JETTER et al: PMT waveform modeling at the Daya Bay experiment, Chinese Physics C 2012(36):733
 double pulsefunc1(double* x, double* par){
     double v=0;
     if( x[0]<par[3] ) v=0;
@@ -62,7 +62,7 @@ int Analysis_step2_v3(){ //Analysis_step2
     t->SetBranchAddress("fWvfmsVec", &data);
 
     t->GetEntry(3);
-    
+
     const int n = 16;// (*data).size();
     const int n1 = (*data)[0].size();
     int Nevts = t->GetEntries();
@@ -119,38 +119,38 @@ int Analysis_step2_v3(){ //Analysis_step2
             hBaseMean[k][i] = new TH1F(name,name, 400,14500,15100);
             hBaseMean[k][i]->SetXTitle("Waveform baseline mean (ADC)");
             hBaseMean[k][i]->SetYTitle("Counts");
-    
+
             sprintf(name,"hBaselineWidth_board%d_ch%d",k,i);
             hBaseWidth[k][i] = new TH1F(name,name, 100,0,20);
             hBaseWidth[k][i]->SetXTitle("Waveform baseline width (ADC)");
             hBaseWidth[k][i]->SetYTitle("Counts");
-    
+
             sprintf(name,"hPulseAmp_board%d_ch%d",k,i);
             hPulseAmp[k][i] = new TH1F(name,name, 800,0,1600);
             //else hPulseAmp[k][i] = new TH1F(name,name, 1800,0,18000);
             hPulseAmp[k][i]->SetXTitle("Pulse amplitude (mV)");
             hPulseAmp[k][i]->SetYTitle("Counts");
-    
+
             sprintf(name,"hPulsePeakTimeBin_board%d_ch%d",k,i);
             hPulsePeakTimeBin[k][i] = new TH1F(name,name, 500,400,500);
             hPulsePeakTimeBin[k][i]->SetXTitle("Time bin at pulse peak (ns)");
             hPulsePeakTimeBin[k][i]->SetYTitle("Counts");
-    
+
             sprintf(name,"hPulseStartTime_board%d_ch%d",k,i);
             hPulseStartTimeBin[k][i] = new TH1F(name,name, 500,400,500);
             hPulseStartTimeBin[k][i]->SetXTitle("Time bin at pulse start (ns)");
             hPulseStartTimeBin[k][i]->SetYTitle("Counts");
-    
+
             sprintf(name,"hPulseSTFromFit_board%d_ch%d",k,i);
             hPulseStartTimeBinFromFit[k][i] = new TH1F(name,name, 500,400,500);
             hPulseStartTimeBinFromFit[k][i]->SetXTitle("Time bin at pulse start from fitting the pulse (ns)");
             hPulseStartTimeBinFromFit[k][i]->SetYTitle("Counts");
-    
+
             sprintf(name,"hPulseWidth_board%d_ch%d",k,i);
             hPulseWidth[k][i] = new TH1F(name,name, 300,0,300);
             hPulseWidth[k][i]->SetXTitle("Pulse width (ns)");
             hPulseWidth[k][i]->SetYTitle("Counts");
-    
+
             sprintf(name,"hPulseCharge_board%d_ch%d", k,i);
             hPulseCharge[k][i] = new TH1F(name,name, 200,0,1000);
             hPulseCharge[k][i]->SetXTitle("Pulse charge (pC)");
@@ -200,7 +200,7 @@ int Analysis_step2_v3(){ //Analysis_step2
         }
     } // end preparing histograms
 
-    // temperature 
+    // temperature
 
     // define the key variables
     double baseline=0, baselinew=0;
@@ -219,7 +219,7 @@ int Analysis_step2_v3(){ //Analysis_step2
     // temp variables
     double asampleV=0, asampleV1=0;
     double pulsetimefitc0=0, pulsetimefit=0;
-    double pulsechargec0=0; 
+    double pulsechargec0=0;
     TH1F* hPulse = new TH1F("pulse","",n1, 0, n1*Tconverter);
     TF1* myfitfunc = new TF1("myfitfunc",pulsefunc,400,1000,5); // function to fit the pulse
     myfitfunc->SetParNames("Amp","#tau_{s}","#tau", "t0", "Offset");
@@ -262,7 +262,7 @@ int Analysis_step2_v3(){ //Analysis_step2
                 //**** pulse amplitude ****//
                 pulseamp = onewaveform[0];
                 for(int j=1; j<n1; j++){
-                    if(onewaveform[j]<pulseamp){ pulseamp = onewaveform[j] ; pulsepeakt = j+1;} 
+                    if(onewaveform[j]<pulseamp){ pulseamp = onewaveform[j] ; pulsepeakt = j+1;}
                 }
                 hPulseAmp[k][i]->Fill( (baseline - pulseamp)*Vconverter );
                 hPulsePeakTimeBin[k][i]->Fill( pulsepeakt*Tconverter );
@@ -317,7 +317,7 @@ int Analysis_step2_v3(){ //Analysis_step2
 
                 //myfitfunc2->SetParameters(5000, 5, pulseST*Tconverter, 0);
                 //hPulse->Fit("myfitfunc2","QR","",pulsepeakt*Tconverter-30,pulsepeakt*Tconverter+20);
-                
+
                 //myfitfunc1->SetParameters(-300, 6, 1, pulseST*Tconverter);
                 //hPulse->Fit("myfitfunc1","QR","",pulsepeakt*Tconverter-30,pulsepeakt*Tconverter+20);
                 //hPulse->Fit("gaus","QR","",pulsepeakt*Tconverter-15,pulsepeakt*Tconverter+20);
@@ -346,7 +346,7 @@ int Analysis_step2_v3(){ //Analysis_step2
                 //double p1 = hPulse->GetFunction("pol1")->GetParameter(1);
                 //pulsetimefit = (baseline - p0)/p1;
                 //frootout->cd();
-                dirWaveform[k]->cd(); 
+                dirWaveform[k]->cd();
                 hPulse->Write();
 
                 //pulse time difference with repect to Ch0 in each board
@@ -373,12 +373,12 @@ int Analysis_step2_v3(){ //Analysis_step2
             } // end channel loop
         } // end digitizer board loop
     } // end trigger number loop
-    
+
     //f->Close();
     //fout.close();
     //TCanvas* canvas=new TCanvas();
     //hBaseMean[0][0]->Draw();
-    
+
     // save file
     frootout->cd();
 
@@ -433,7 +433,7 @@ int Analysis_step2_v3(){ //Analysis_step2
         cAmpDis[k]->Write();
         //cAmpDis[k]->Close();
     }
-    
+
     fout.close();
     //frootout->Close();
 
