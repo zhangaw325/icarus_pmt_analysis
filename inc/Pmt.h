@@ -18,7 +18,10 @@ class PMT
     PMT();
     ~PMT();
 
+    void printMessage();
+
   private:
+
 };
 
-#endif __PMT_H
+#endif //__PMT_H

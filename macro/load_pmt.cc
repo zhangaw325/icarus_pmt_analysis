@@ -1,12 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
-// PMT Methods implementation
 //
-// mailto:ascarpell@bnl.gov
+//
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "Pmt.h"
 
-PMT::PMT(){};
-PMT::~PMT(){};
-
-void PMT::printMessage(){ std::cout << "Hello there" << std::endl; }
+void load_pmt()
+{
+  //PMT *myPMT = new PMT();
+  //myPMT->printMessage();
+}
