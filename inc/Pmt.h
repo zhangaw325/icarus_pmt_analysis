@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "Waveform.h"
+
 #include "TH1D.h"
 
 using namespace std;
@@ -21,27 +23,20 @@ class PMT
 
   public:
 
-    typedef vector<double> Waveform_t;
-
-    PMT(int run, int event, int board, int channel, int n_samples);
+    PMT(int run, int event, int board, int channel, int n_samples,
+                                                Waveform::Rawdigits_t waveform);
     ~PMT();
-
-    // Setters
-    void setWaveform( vector<unsigned short> waveform  );
 
     // Getters
     int getRun(){ return fRun; };
     int getEvent(){ return fEvent; };
     int getBoard(){ return fBoard; };
     int getChannel(){ return fChannel; }
-    vector<unsigned short> getRawWaveform(){ return fRawWaveform; };
-    Waveform_t getWaveform(){ return fWaveform; };
+    Waveform::Rawdigits_t getRawWaveform(){ return fRawWaveform; };
+    Waveform::Waveform_t getWaveform(){ return fWaveform.signal; };
     void getBaselineParams( double &mean, double &stdev );
 
     TH1D* getWaveformHist();
-
-    // Basic signal processing functions
-    void removeBaseline( int n_sample_baseline=300 );
 
     // Helper to identify a PMT in list
     bool find(int run, int event, int board, int channel );
@@ -57,10 +52,7 @@ class PMT
     double m_sampling_period;
 
     vector<unsigned short> fRawWaveform;
-    PMT::Waveform_t fWaveform;
-
-    double fBaseline=0.0; // Mean baseline value
-    double fBaselineWidth=0.0; // Stdev baseline
+    Waveform fWaveform;
 
 };
 

@@ -82,8 +82,8 @@ void load_pmt(string filename="../data/data_dl2_run1077_23_20200205T183344_dl4.r
       {
 
         // Fill the PMT object
-        PMT *pmt = new PMT(1, event, board, channel, n_samples);
-        pmt->setWaveform( (*data).at(channel+n_channels*board) );
+        PMT *pmt = new PMT(1, event, board, channel, n_samples,
+                                          (*data).at(channel+n_channels*board));
         pmtVector.push_back(pmt);
 
       } // end channel
