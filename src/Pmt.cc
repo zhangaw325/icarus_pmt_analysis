@@ -6,13 +6,14 @@
 
 #include "Pmt.h"
 
-PMT::PMT(int run, int event, int board, int channel, int n_samples,
+PMT::PMT(int run, int subrun, int event, int board, int channel, int n_samples,
                                                  Waveform::Rawdigits_t waveform)
-  : fRun(run)
-  , fEvent(event)
-  , fBoard(board)
-  , fChannel(channel)
-  , fNSamples(n_samples)
+  : m_run(run)
+  , m_subrun(subrun)
+  , m_event(event)
+  , m_board(board)
+  , m_channel(channel)
+  , m_nsamples(n_samples)
   , m_sampling_period(1.0)
 {
   fRawWaveform=waveform;
@@ -27,7 +28,23 @@ PMT::~PMT(){};
 
 bool PMT::find(int run, int event, int board, int channel )
 {
-  return (run==fRun && event==fEvent && board==fBoard && channel==fChannel);
+  return (run==m_run && event==m_event && board==m_board && channel==m_channel);
+};
+
+//------------------------------------------------------------------------------
+
+bool PMT::hasSignal( double threshold )
+{
+  // Just checking for the pmts having a signal
+  return fWaveform.hasSignal(threshold);
+};
+
+//------------------------------------------------------------------------------
+
+bool PMT::hasPulse( double threshold )
+{
+  // If a pulse is found, then it fills also the object pulse
+  return fWaveform.hasPulse(threshold, pulse);
 };
 
 //------------------------------------------------------------------------------
@@ -42,7 +59,7 @@ void PMT::getBaselineParams( double &mean, double &stdev )
 
 TH1D* PMT::getWaveformHist()
 {
-  TH1D *hist = new TH1D("hist", "hist", fNSamples, 0, fNSamples*m_sampling_period);
-  for(int t=0; t<fNSamples; t++){ hist->Fill( t, fWaveform.signal.at(t) ); }
+  TH1D *hist = new TH1D("hist", "hist", m_nsamples, 0, m_nsamples*m_sampling_period);
+  for(int t=0; t<m_nsamples; t++){ hist->Fill( t, fWaveform.waveform.at(t) ); }
   return hist;
 };

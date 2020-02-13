@@ -14,38 +14,17 @@
 
 using namespace std;
 
-void printWaveform(int run, int event, int board, int channel, vector<PMT*> pmts )
+void load_pmt()
 {
-    char name[100];
-    sprintf(name, "Run%d-Event%d-Board%d-Channel%d", run, event, board, channel);
-    TCanvas *c = new TCanvas(name, name, 600, 400);
 
-    auto it = find_if( pmts.begin(), pmts.end(), [ & ] ( PMT *pmt ){
-                                return pmt->find(run, event, board, channel); } );
+  // Input
+  int run=1077;
+  int subrun=23;
 
-    if( it != pmts.end() )
-    {
-      PMT *pmt = *it;
+  string filename="../data/data_dl2_run1077_23_20200205T183344_dl4.root";
+  string treename="caenv1730dump/events";
 
-      TH1D *hist = pmt->getWaveformHist();
 
-      hist->SetName(name);
-      hist->SetTitle(name);
-      hist->Draw("hist");
-    }
-    else
-    {
-      cout << "Impossible to find PMTs  with board " << board
-                                            << " and channel " << channel << endl;
-      return;
-    }
-}
-
-//==============================================================================
-
-void load_pmt(string filename="../data/data_dl2_run1077_23_20200205T183344_dl4.root",
-                                                  string treename="caenv1730dump/events")
-{
   // Open TFile
   TFile* ifile = new TFile(filename.c_str(), "READ");
   cout << "Open TFile"+filename << endl;
@@ -59,44 +38,41 @@ void load_pmt(string filename="../data/data_dl2_run1077_23_20200205T183344_dl4.r
   std::vector<std::vector<uint16_t> > *data=0; //unsigned short
   tevents->SetBranchAddress("fWvfmsVec", &data);
 
-
-  vector<PMT*> pmtVector;
+  vector<Event*> events;
 
   // Loop over the events
-  for(int event=1; event<n_events; event++)
+  for(int e=1; e<3; e++)
   {
-    cout << "Processing event: " << event << endl;
+    cout << "Processing event: " << e << endl;
 
-    tevents->GetEvent(event);
+    tevents->GetEvent(e);
+
+    // Initalize the Event object
+    Event *event = new Event(run, subrun, e, n_events);
 
     const int n_channels = 16;
     const int n_samples = (*data)[0].size();
     const int n_boards = (*data).size()/n_channels;
 
-    // Loop over the boards
     for(int board=0; board<n_boards; board++)
     {
-
-      // Loop over the PMTs
       for(int channel=0; channel<n_channels; channel++)
       {
 
-        // Fill the PMT object
-        PMT *pmt = new PMT(1, event, board, channel, n_samples,
+        // Create the PMT object
+        PMT *pmt = new PMT(run, subrun ,e, board, channel, n_samples,
                                           (*data).at(channel+n_channels*board));
-        pmtVector.push_back(pmt);
+
+        // Save the PMT in the event
+        event->setPmt(pmt);
 
       } // end channel
     } // end boards
 
-    // Fill the Event Object
-    // ..
+    // Save the event in a vector
+    events.push_back(event);
 
   } // end events
-
-  // ..
-
-  printWaveform(1, 1, 6, 1, pmtVector);
 
   cout << "All done ..." << endl;
 

@@ -16,29 +16,42 @@
 
 using namespace std;
 
+struct Pulse
+{
+    double start_time;
+    double width;
+    double amplitude;
+    double integral;
+};
+
 class Waveform
 {
 
-  public:
+    public:
 
-    typedef vector<unsigned short> Rawdigits_t;
-    typedef vector<double> Waveform_t;
+      typedef vector<unsigned short> Rawdigits_t;
+      typedef vector<double> Waveform_t;
 
-    Waveform();
-    Waveform( vector<unsigned short> waveform );
-    ~Waveform();
+      Waveform();
+      Waveform( vector<unsigned short> rawWaveform );
+      ~Waveform();
 
-    Waveform_t signal;
+      bool hasSignal(double n_sigma);
 
-    double baselineMean;
-    double baselineWidth;
+      bool hasPulse(double n_sigma, Pulse & pulse);
 
-  private:
+      Waveform_t waveform;
 
-    void removeBaseline();
+      double baselineMean;
+      double baselineWidth;
 
-    int n_sample_baseline;
+    private:
+
+      int n_sample_baseline;
+
+      void removeBaseline();
 
 };
+
 
 #endif //__WAVEFORM_H
