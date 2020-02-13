@@ -16,28 +16,35 @@ using namespace std;
 
 void printWaveform(int run, int event, int board, int channel, vector<PMT*> pmts )
 {
-  TCanvas *c = new TCanvas("c", "", 600, 400);
+    char name[100];
+    sprintf(name, "Run%d-Event%d-Board%d-Channel%d", run, event, board, channel);
+    TCanvas *c = new TCanvas(name, name, 600, 400);
 
-  auto it = find_if( pmts.begin(), pmts.end(), [ & ] ( PMT *pmt ){
-                              return pmt->find(run, event, board, channel); } );
+    auto it = find_if( pmts.begin(), pmts.end(), [ & ] ( PMT *pmt ){
+                                return pmt->find(run, event, board, channel); } );
 
-  if( it != pmts.end() )
-  {
-    PMT *pmt = *it;
-    pmt->getWaveformHist()->Draw("hist");
-  }
-  else
-  {
-    cout << "Impossible to find PMTs  with board " << board
-                                          << " and channel " << channel << endl;
-    return;
-  }
+    if( it != pmts.end() )
+    {
+      PMT *pmt = *it;
+
+      TH1D *hist = pmt->getWaveformHist();
+
+      hist->SetName(name);
+      hist->SetTitle(name);
+      hist->Draw("hist");
+    }
+    else
+    {
+      cout << "Impossible to find PMTs  with board " << board
+                                            << " and channel " << channel << endl;
+      return;
+    }
 }
 
 //==============================================================================
 
-void load_pmt(string filename="../data/processed_data_result.root",
-                                         string treename="caenv1730dump/events")
+void load_pmt(string filename="../data/data_dl2_run1077_23_20200205T183344_dl4.root",
+                                                  string treename="caenv1730dump/events")
 {
   // Open TFile
   TFile* ifile = new TFile(filename.c_str(), "READ");
@@ -56,7 +63,7 @@ void load_pmt(string filename="../data/processed_data_result.root",
   vector<PMT*> pmtVector;
 
   // Loop over the events
-  for(int event=0; event<n_events; event++)
+  for(int event=1; event<n_events; event++)
   {
     cout << "Processing event: " << event << endl;
 
@@ -69,13 +76,14 @@ void load_pmt(string filename="../data/processed_data_result.root",
     // Loop over the boards
     for(int board=0; board<n_boards; board++)
     {
+
       // Loop over the PMTs
       for(int channel=0; channel<n_channels; channel++)
       {
+
         // Fill the PMT object
         PMT *pmt = new PMT(1, event, board, channel, n_samples);
         pmt->setWaveform( (*data).at(channel+n_channels*board) );
-
         pmtVector.push_back(pmt);
 
       } // end channel
@@ -88,7 +96,7 @@ void load_pmt(string filename="../data/processed_data_result.root",
 
   // ..
 
-  printWaveform(1, 1, 23, 15, pmtVector);
+  printWaveform(1, 1, 6, 1, pmtVector);
 
   cout << "All done ..." << endl;
 

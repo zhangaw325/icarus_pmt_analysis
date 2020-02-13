@@ -50,8 +50,8 @@ void process_test_step2_multiBoards(){
     //f->Close();
 
     TCanvas * c[n0];
-    int index=0;//index+1
-    for(int i=index; i<24; i++){
+    int index=4;//index+1
+    for(int i=index; i<index+1; i++){
         sprintf(name,"canvas_board_%d", i);
         c[i] = new TCanvas(name,name,1600,900);
         c[i]->Divide(4,n/4);
