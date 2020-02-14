@@ -19,14 +19,18 @@ void loadLib(){
   std::string currentdir( cwd );
   std::string includepath=currentdir+"/../inc/";
 
-  gSystem->SetBuildDir("obj",true);
-  gInterpreter->AddIncludePath(includepath.c_str());
-  gROOT->LoadMacro((currentdir+"/../src/Event.cc+").c_str());
-  gROOT->LoadMacro((currentdir+"/../src/Pmt.cc+").c_str());
-  gROOT->LoadMacro((currentdir+"/../src/Waveform.cc+").c_str());
+  cout << includepath << endl;
 
-  //gROOT->LoadMacro((currentdir+"/source/311Lib.cc+").c_str());
-  //gROOT->LoadMacro((currentdir+"/source/311style.cc+").c_str());
+  gSystem->SetBuildDir("obj",true);
+
+  // For some reasons ROOT has not a dictionary for vector of vectors
+  gInterpreter->GenerateDictionary("vector<vector<unsigned short>>", "vector");
+
+  // Custom classes
+  gInterpreter->AddIncludePath(includepath.c_str());
+  gROOT->LoadMacro((currentdir+"/../src/Waveform.cc+").c_str());
+  //gROOT->LoadMacro((currentdir+"/../src/Event.cc+").c_str());
+  gROOT->LoadMacro((currentdir+"/../src/Pmt.cc+").c_str());
 
   #define __INITIALIZED__
 

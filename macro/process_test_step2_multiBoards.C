@@ -1,7 +1,7 @@
 
 void process_test_step2_multiBoards(){
 
-    TFile* f = new TFile("processed_data_result.root","read");//processed_data_result.root","read");
+    TFile* f = new TFile("../data/data_dl2_run1077_23_20200205T183344_dl4.root","read");//processed_data_result.root","read");
     TTree* t = (TTree*)f->Get("caenv1730dump/events");
 
     std::vector<std::vector<uint16_t> > *data=0; //unsigned short
