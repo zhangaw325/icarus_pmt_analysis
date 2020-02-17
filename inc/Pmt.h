@@ -36,6 +36,8 @@ class PMT
     int getChannel(){ return m_channel; }
     vector<Waveform*> getWaveforms(){ return m_waveform_array; };
 
+    vector<double> getAmplitudes();
+
     // Helpers
     bool hasWaveform();
     void clean();

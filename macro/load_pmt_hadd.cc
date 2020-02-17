@@ -30,7 +30,7 @@ PMT* locatePMT(int run, int board, int channel , vector<PMT*> pmts)
   return *it;
 }
 
-void load_pmt()
+void load_pmt_hadd()
 {
   //****************************************************************************
   // General definitions ( ..import from DB )
@@ -57,7 +57,7 @@ void load_pmt()
   //****************************************************************************
   // Input
 
-  string filename="../data/data_dl1_run1067_11_20200204T230459_dl3.root";
+  string filename="../data/data_dl2_run1077_23_20200205T183344_dl4.root";
   string treename="caenv1730dump/events";
 
   // Open TFile
@@ -113,17 +113,28 @@ void load_pmt()
   // Now save the PMTs
 
   // Open TFile
-  TFile ofile("../data/data_run1067_11_pmt.root", "RECREATE"); ofile.cd();
+  TFile ofile("../data/data_run1077_23_test_hadd.root", "RECREATE"); ofile.cd();
 
   TTree pmt_tree("pmts", "Calibration information for each PMT");
-  PMT *pmt;
-  pmt_tree.Branch( "pmt", &pmt );
+  int pmt_board=0, pmt_channel=0;
+  double pmt_amplitude[2000];
+  pmt_tree.Branch( "pmt_board", &pmt_board );
+  pmt_tree.Branch( "pmt_channel", &pmt_channel );
+  pmt_tree.Branch( "pmt_amplitude", &pmt_amplitude, "pmt_amplitude[2000]/D" );
 
   for(auto pmt_it : pmts)
   {
     if( pmt_it->hasWaveform() )
     {
-      pmt = pmt_it;
+      pmt_board = pmt_it->getBoard();
+      pmt_channel = pmt_it->getChannel();
+      vector<double> amplitude = pmt_it->getAmplitudes();
+
+      for( int i=0; i<amplitude.size(); i++ )
+      {
+        pmt_amplitude[i] = amplitude.at(i);
+      }
+
       pmt_tree.Fill();
     }
   }

@@ -11,9 +11,31 @@
 
 #include "TFile.h"
 #include "TTree.h"
+#include "TChain.h"
 #include "TH1D.h"
 
+#include <fstream>
+#include <sstream>
+
 using namespace std;
+
+void addTChain( string list_name, TChain *tchain, int ncount)
+{
+  /* Read the list of filenames to add to the TChain */
+  fstream input( list_name, ios::in );
+  int count =0;
+  if (input.is_open()){   //checking whether the file is open
+      string tp;
+      while(getline(input, tp) && count < ncount ){ //read data from file object and put it into string.
+         tchain->Add( tp.c_str() );
+         count++;
+      }
+      input.close(); //close the file object.
+   }
+
+}
+
+//------------------------------------------------------------------------------
 
 PMT* locatePMT(int run, int board, int channel , vector<PMT*> pmts)
 {
@@ -22,7 +44,8 @@ PMT* locatePMT(int run, int board, int channel , vector<PMT*> pmts)
 
   auto find = [&]( PMT *pmt )
   {
-    return (pmt->getRun()==run && pmt->getBoard()==board && pmt->getChannel()==channel);
+    return (pmt->getRun()==run && pmt->getBoard()==board
+                                                 && pmt->getChannel()==channel);
   };
 
   auto it = std::find_if( pmts.begin(), pmts.end(), find );
@@ -30,7 +53,9 @@ PMT* locatePMT(int run, int board, int channel , vector<PMT*> pmts)
   return *it;
 }
 
-void load_pmt()
+//------------------------------------------------------------------------------
+
+void load_pmt_tchain()
 {
   //****************************************************************************
   // General definitions ( ..import from DB )
@@ -57,31 +82,24 @@ void load_pmt()
   //****************************************************************************
   // Input
 
-  string filename="../data/data_dl1_run1067_11_20200204T230459_dl3.root";
   string treename="caenv1730dump/events";
+  TChain *tchain =  new TChain(treename.c_str());
 
-  // Open TFile
-  TFile* ifile = new TFile(filename.c_str(), "READ");
-  cout << "Open TFile"+filename << endl;
-
-  // Get the TTres
-  TTree* tevents = (TTree*)ifile->Get(treename.c_str());
-  int n_events = tevents->GetEntries();
-  cout << "TTree"+treename << " has " << n_events << " events" << endl;
+  addTChain( "../data/decoded/new_decoded_west_m50.list", tchain, 3);
 
   // Set Branch address
   std::vector<std::vector<uint16_t> > *data=0; //unsigned short
-  tevents->SetBranchAddress("fWvfmsVec", &data);
+  tchain->SetBranchAddress("fWvfmsVec", &data);
 
   //****************************************************************************
   // Event loop
 
   // Loop over the events
-  for(int e=0; e<n_events; e++)
+  for(int e=0; e<tchain->GetEntries(); e++)
   {
     cout << "Processing event: " << e << endl;
 
-    tevents->GetEvent(e);
+    tchain->GetEvent(e);
 
     const int n_channels = 16;
     const int n_samples = (*data)[0].size();
@@ -107,13 +125,11 @@ void load_pmt()
 
   } // end events
 
-  ifile->Close();
-
   //****************************************************************************
   // Now save the PMTs
 
   // Open TFile
-  TFile ofile("../data/data_run1067_11_pmt.root", "RECREATE"); ofile.cd();
+  TFile ofile("../data/pmt__west_m50.root", "RECREATE"); ofile.cd();
 
   TTree pmt_tree("pmts", "Calibration information for each PMT");
   PMT *pmt;
