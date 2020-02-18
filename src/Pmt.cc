@@ -7,7 +7,7 @@
 #include "Pmt.h"
 
 PMT::PMT( )
-{};
+{ };
 
 //------------------------------------------------------------------------------
 
@@ -15,7 +15,9 @@ PMT::PMT( int run, int board, int channel )
   : m_run(run)
   , m_board(board)
   , m_channel(channel)
-{};
+{
+  this->initHist();
+};
 
 //------------------------------------------------------------------------------
 
@@ -24,41 +26,52 @@ PMT::~PMT()
 
 //------------------------------------------------------------------------------
 
+void PMT::initHist()
+{
+  char hname[100];
+
+  // Amplitude
+  sprintf(hname, "hist_board%d_channel%d_amplitude", m_board,  m_channel);
+  h_amplitude = new TH1D(hname, hname, 100, 0, 2000);
+
+  sprintf(hname, "hist_board%d_channel%d_amplitude_low", m_board,  m_channel);
+  h_amplitude_low = new TH1D(hname, hname, 20, 0, 150);
+
+};
+
+//------------------------------------------------------------------------------
+
 void PMT::loadWaveform( Waveform *waveform )
 {
-  m_waveform_array.push_back( waveform );
+
+  // Fetch the relevant quantities from the waveform
+  double amplitude = abs( waveform->getAmplitude() );
+
+  // Fill the histograms
+  h_amplitude->Fill(amplitude);
+  h_amplitude_low->Fill(amplitude);
+
+  // Fill the arrays
+  // m_amplitude_array.push_back(amplitude);
+
 };
 
 //------------------------------------------------------------------------------
 
-bool PMT::hasWaveform()
+void PMT::writeHist()
 {
-  return ( m_waveform_array.size() > 0 );
+
+  // Write the histograms to file
+  h_amplitude->Write();
+  h_amplitude_low->Write();
+
 };
-
-//------------------------------------------------------------------------------
-
-vector<double> PMT::getAmplitudes()
-{
-  vector<double> m_amplitude_array;
-
-  for( auto waveform : m_waveform_array )
-  {
-    if(waveform->hasPulse(1.0))
-    {
-      m_amplitude_array.push_back( waveform->getAmplitude() );
-    }
-  }
-
-  return m_amplitude_array;
-
-}
 
 //------------------------------------------------------------------------------
 
 void PMT::clean()
 {
-  m_waveform_array.clear();
+  // m_amplitude_array.clear();
 };
 
 //------------------------------------------------------------------------------

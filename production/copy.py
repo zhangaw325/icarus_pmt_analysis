@@ -11,7 +11,7 @@ def write_file(flist, flistname):
 
     return
 
-def copy_files( ilistname, counts  ):
+def copy_files( ilistname, counts, outdir ):
 
     new_files=[]
 
@@ -24,11 +24,10 @@ def copy_files( ilistname, counts  ):
             cnt=cnt+1
             line = line.strip()
 
-            statement="scp ascarpel@icarusgpvm04.fnal.gov:"+line+" ."
+            statement="scp ascarpel@icarusgpvm04.fnal.gov:"+line+" "+outdir
             os.system(statement)
 
-            cwd = os.getcwd().replace('production', 'data')
-            new_files.append(cwd+"/"+line.split('/')[-1])
+            new_files.append(outdir+"/"+line.split('/')[-1])
 
     return new_files
 
@@ -36,8 +35,9 @@ def main():
 
     ilistname=sys.argv[1]
     counts = int(sys.argv[2])
+    outdir = "/media/disk_a/ICARUS/PMT_gainData_20200205_decoded"
 
-    new_files = copy_files( ilistname, counts )
+    new_files = copy_files( ilistname, counts, outdir)
 
     write_file(new_files, "./new_"+ilistname)
 

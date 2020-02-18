@@ -13,7 +13,6 @@
 #include <stdio.h>
 
 #include "Waveform.h"
-
 #include "TH1D.h"
 
 using namespace std;
@@ -34,13 +33,13 @@ class PMT
     int getRun(){ return m_run; };
     int getBoard(){ return m_board; };
     int getChannel(){ return m_channel; }
-    vector<Waveform*> getWaveforms(){ return m_waveform_array; };
 
-    vector<double> getAmplitudes();
+    // vector<double> getAmplitudes(){ return m_amplitude_array; };
 
     // Helpers
-    bool hasWaveform();
     void clean();
+    void initHist();
+    void writeHist();
 
   private:
 
@@ -48,7 +47,10 @@ class PMT
     int m_board;
     int m_channel;
 
-    vector<Waveform*> m_waveform_array;
+    // vector<double> m_amplitude_array;
+
+    TH1D *h_amplitude;
+    TH1D *h_amplitude_low;
 
 };
 

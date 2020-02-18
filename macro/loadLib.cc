@@ -29,7 +29,6 @@ void loadLib(){
   // Custom classes
   gInterpreter->AddIncludePath(includepath.c_str());
   gROOT->LoadMacro((currentdir+"/../src/Waveform.cc+").c_str());
-  //gROOT->LoadMacro((currentdir+"/../src/Event.cc+").c_str());
   gROOT->LoadMacro((currentdir+"/../src/Pmt.cc+").c_str());
 
   #define __INITIALIZED__

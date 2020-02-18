@@ -85,7 +85,7 @@ void load_pmt_tchain()
   string treename="caenv1730dump/events";
   TChain *tchain =  new TChain(treename.c_str());
 
-  addTChain( "../data/decoded/new_decoded_west_m50.list", tchain, 3);
+  addTChain( "../production/new_decoded_west_m50.list", tchain, 1);
 
   // Set Branch address
   std::vector<std::vector<uint16_t> > *data=0; //unsigned short
@@ -114,7 +114,7 @@ void load_pmt_tchain()
         Waveform *waveform = new Waveform(run, subrun ,e, board, channel);
         waveform->loadData((*data).at(channel+n_channels*board));
 
-        if(waveform->hasSignal(1.0))
+        if(waveform->hasPulse(1.0))
         {
           PMT *pmt_temp = locatePMT(run, board, channel, pmts);
           pmt_temp->loadWaveform(waveform);
@@ -129,23 +129,11 @@ void load_pmt_tchain()
   // Now save the PMTs
 
   // Open TFile
-  TFile ofile("../data/pmt__west_m50.root", "RECREATE"); ofile.cd();
+  TFile ofile("../data/pmt_west_m50.root", "RECREATE");
+  ofile.cd();
 
-  TTree pmt_tree("pmts", "Calibration information for each PMT");
-  PMT *pmt;
-  pmt_tree.Branch( "pmt", &pmt );
+  for(auto pmt_it : pmts){ pmt_it->writeHist(); }
 
-  for(auto pmt_it : pmts)
-  {
-    if( pmt_it->hasWaveform() )
-    {
-      pmt = pmt_it;
-      pmt_tree.Fill();
-    }
-  }
-
-  pmt_tree.Write("pmts");
-  pmt_tree.Print();
   ofile.Close();
 
   cout << "All done ..." << endl;
