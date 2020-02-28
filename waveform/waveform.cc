@@ -98,7 +98,11 @@ int main( int argc, char* argv[] )
 
   for(int event=0; event<nevents; event++)
   {
-    cout << "Processing event: " << event << endl;
+
+    if ( event % 100 == 0 )
+    {
+      cout<<"["<<int((float(event)/float(nevents))*100)<<"%] Completed"<<endl;
+    }
 
     tevents->GetEvent(event);
 

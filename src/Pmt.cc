@@ -35,7 +35,7 @@ void PMT::initHist()
   h_amplitude = new TH1D(hname, hname, 100, 0, 2000);
 
   sprintf(hname, "hist_board%d_channel%d_amplitude_low", m_board,  m_channel);
-  h_amplitude_low = new TH1D(hname, hname, 20, 0, 150);
+  h_amplitude_low = new TH1D(hname, hname, 100, 0, 150);
 
 };
 
@@ -46,6 +46,7 @@ void PMT::loadWaveform( Waveform *waveform )
 
   // Fetch the relevant quantities from the waveform
   double amplitude = abs( waveform->getAmplitude() );
+  double integral = abs( waveform->getIntegral() );
 
   // Fill the histograms
   h_amplitude->Fill(amplitude);
