@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Macro to analyze the PMT noise
-// Process the noise analyis for the filename given as argument. Edit the function
-// argument with the file you prefer. Note: the output will always be in the format
+// Process the noise analyis for the filename given as argument. Edit the input
+// filename with the file you prefer. Note: the output will always be in the format
 // "noise_run%d_00%d.root". you must change manually the variables run and subrun for now.
 //
 // Usage: root -l loadLib.cc noise_ana.cc
-// Out of the box, it will produce a root file in the macro folder called "noise_run1264_001.root"
+// Out of the box, it will produce a root file in the macro folder called "noise_run1264_1.root"
 // with the ADC distribution of all the pmts in data_dl1_run1264_1_20200227T235326-decoded.root
 // after baseline subtraction.
 //
@@ -22,7 +22,7 @@
 
 using namespace std;
 
-//------------------------------------------------------------------------------
+
 
 void noise_ana()
 {
@@ -39,8 +39,7 @@ void noise_ana()
   // Input
   //
 
-  string treename="caenv1730dump/events";
-  TChain *tchain =  new TChain(treename.c_str());
+  TChain *tchain =  new TChain("caenv1730dump/events");
 
   // HERE you filename is loaded inside the macro to be processed!
   tchain->Add(filename.c_str());
@@ -116,7 +115,7 @@ void noise_ana()
   // Output: create an output TFile and write the histogram in it
   //
 
-  char ofilename[100]; sprintf(ofilename, "noise_run%d_00%d.root", run, subrun);
+  char ofilename[100]; sprintf(ofilename, "noise_run%d_%d.root", run, subrun);
   TFile ofile(ofilename, "RECREATE"); ofile.cd();
 
   for(int board=0; board<nboards; board++)
