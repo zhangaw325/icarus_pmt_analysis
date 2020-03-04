@@ -3,7 +3,7 @@
 //
 // mailto:ascarpell@bnl.gov
 ////////////////////////////////////////////////////////////////////////////////
-
+#include "Utils.h"
 #include "Pmt.h"
 
 PMT::PMT( )
@@ -16,6 +16,18 @@ PMT::PMT( int run, int board, int channel )
   , m_board(board)
   , m_channel(channel)
 {
+  m_pmt_number=m_channel*geo::nchannels*m_board;
+  this->initHist();
+};
+
+//------------------------------------------------------------------------------
+
+PMT::PMT( int run, int pmt_number)
+  : m_run(run)
+  , m_pmt_number(pmt_number)
+{
+  m_board=0; m_channel=0;
+  this->getBoardAndChannel(m_pmt_number, m_board, m_channel);
   this->initHist();
 };
 
@@ -36,7 +48,15 @@ void PMT::initHist()
 
   sprintf(hname, "hist_board%d_channel%d_amplitude_low", m_board,  m_channel);
   h_amplitude_low = new TH1D(hname, hname, 100, 0, 150);
+};
 
+//------------------------------------------------------------------------------
+
+void PMT::getBoardAndChannel( int pmt_number, int & board, int & channel )
+{
+  //Return the board and channel number given the absolute pmt number
+  board = pmt_number/geo::nchannels;
+  channel = pmt_number%geo::nchannels;
 };
 
 //------------------------------------------------------------------------------

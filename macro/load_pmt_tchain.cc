@@ -12,6 +12,7 @@
 // mailto:ascarpell@bnl.gov
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "Geometry.h"
 #include "Utils.h"
 #include "Waveform.h"
 #include "Pmt.h"
@@ -26,22 +27,13 @@
 
 using namespace std;
 
-
-
 void load_pmt_tchain()
 {
 
   // CHANGE THE FILENAME BELOW IF WANT TO USE ONE OTHER FILE FOR YOUR ANALYSIS
   string filename="/media/disk_a/ICARUS/PMT_gainData_20200205_decoded/data_dl1_run1067_1_20200204T225822_dl3_decoded.root";
-  int run=0; // << CHANGE ACCORDING TO THE FILE USED
-  int subrun=0; // << CHANGE ACCORDING TO THE FILE USED
-
-  const int nboards=12; // << DO NOT CHANGE!
-  const int nchannels=16; // << DO NOT CHANGE!
-
+  int run=0; int subrun=0;
   utils::get_rundata(filename, run, subrun);
-  cout << run << " " << subrun << endl;
-
 
   //****************************************************************************
   // Input
@@ -62,10 +54,10 @@ void load_pmt_tchain()
   // noise_ana.cc with an example
   //
 
-  PMT* pmts[nboards][nchannels];
-  for( int board=0; board<nboards; board++ )
+  PMT* pmts[geo::nboards][geo::nchannels];
+  for( int board=0; board<geo::nboards; board++ )
   {
-    for( int channel=0; channel<nchannels; channel++ )
+    for( int channel=0; channel<geo::nchannels; channel++ )
     {
       pmts[board][channel] = new PMT( run, board, channel );
     }
@@ -84,9 +76,9 @@ void load_pmt_tchain()
     // WE TAKE THE EVENT
     tchain->GetEvent(e);
 
-    for(int board=0; board<nboards; board++)
+    for(int board=0; board<geo::nboards; board++)
     {
-      for(int channel=0; channel<nchannels; channel++)
+      for(int channel=0; channel<geo::nchannels; channel++)
       {
 
         // Create the WAVEFORM OBJECT
@@ -97,7 +89,7 @@ void load_pmt_tchain()
         // AUTOMATICALLY SUBSTRACTED. YOU CAN USE THE FUNCTION "getWaveform()"
         // TO EXTRACT THE WAVEFORM VECTOR AFTER BASELINE SUBTRACTION OR
         // "getRawWaveform()" BEFORE BASELINE SUBTRACTION.
-        waveform->loadData((*data).at(channel+nchannels*board));
+        waveform->loadData((*data).at(channel+geo::nchannels*board));
 
         // THIS PART IS SOMETHING THAT YOU PROBABLY HAVE TO MODIFY:
         // WHAT THE CODE DOES HERE IS CHECKING IF THE WAFEFORM SATISFY MY CRITERIA
@@ -113,7 +105,6 @@ void load_pmt_tchain()
   } // end events
 
 
-
   //****************************************************************************
   // Output: create an output TFile and write the histogram in it
   //
@@ -121,9 +112,9 @@ void load_pmt_tchain()
   char ofilename[100]; sprintf(ofilename, "pmt_run%d_%d.root", run, subrun);
   TFile ofile(ofilename, "RECREATE"); ofile.cd();
 
-  for( int board=0; board<nboards; board++ )
+  for( int board=0; board<geo::nboards; board++ )
   {
-    for( int channel=0; channel<nchannels; channel++ )
+    for( int channel=0; channel<geo::nchannels; channel++ )
     {
       pmts[board][channel]->writeHist();
     }
