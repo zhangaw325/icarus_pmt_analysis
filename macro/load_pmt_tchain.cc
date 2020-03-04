@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "Geometry.h"
-#include "Utils.h"
+#include "Run.h"
 #include "Waveform.h"
 #include "Pmt.h"
 
@@ -32,8 +32,16 @@ void load_pmt_tchain()
 
   // CHANGE THE FILENAME BELOW IF WANT TO USE ONE OTHER FILE FOR YOUR ANALYSIS
   string filename="/media/disk_a/ICARUS/PMT_gainData_20200205_decoded/data_dl1_run1067_1_20200204T225822_dl3_decoded.root";
-  int run=0; int subrun=0;
-  utils::get_rundata(filename, run, subrun);
+
+  // THE RUN CLASS SHOULD ASSIGN THE RIGTH RUN AND SUBRUN NUMBERS ACCORDING TO
+  // THE FILENAME GIVEN
+  RUN my_run(filename);
+  int run=my_run.getRun();
+  int subrun=my_run.getSubrun();
+  int optical_channel = my_run.getOpticalChannel();
+
+  cout << "Processing run: " << run << " and subrun: " << subrun << endl;
+  cout << "Optical channel is: " << optical_channel << endl;
 
   //****************************************************************************
   // Input
@@ -80,6 +88,10 @@ void load_pmt_tchain()
     {
       for(int channel=0; channel<geo::nchannels; channel++)
       {
+
+        // THIS CONDITION EXCLUDES PMTS WHICH ARE DIRECTLY ILLUMINATED BY
+        // THE LASER
+        if( pmts[board][channel]->isIlluminated(optical_channel) ){ continue; }
 
         // Create the WAVEFORM OBJECT
         Waveform *waveform = new Waveform(run, subrun ,e, board, channel);

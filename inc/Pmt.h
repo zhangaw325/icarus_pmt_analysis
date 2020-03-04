@@ -44,6 +44,7 @@ class PMT
     void clean();
     void initHist();
     void writeHist();
+    bool isIlluminated( int optical_channel );
 
   private:
 

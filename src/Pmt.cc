@@ -16,7 +16,7 @@ PMT::PMT( int run, int board, int channel )
   , m_board(board)
   , m_channel(channel)
 {
-  m_pmt_number=m_channel*geo::nchannels*m_board;
+  m_pmt_number=m_channel+geo::nchannels*m_board;
   this->initHist();
 };
 
@@ -57,6 +57,27 @@ void PMT::getBoardAndChannel( int pmt_number, int & board, int & channel )
   //Return the board and channel number given the absolute pmt number
   board = pmt_number/geo::nchannels;
   channel = pmt_number%geo::nchannels;
+};
+
+//------------------------------------------------------------------------------
+
+bool PMT::isIlluminated( int optical_channel )
+{
+  // True if a pmt is illuminated by a given optical channel with direct light
+  bool m_isIlluminated=false;
+
+  int laser_groups=10;
+  optical_channel-=18; // put the optical channel in the range 0-18
+
+  // We compare the optical channel with the absolute pmt number.
+  // NB: This assumption works only in the case all boards are taken and optical
+  // channel number is changed in progressive increasing order.
+  if( m_pmt_number>=optical_channel*laser_groups &
+                                m_pmt_number<(optical_channel+1)*laser_groups ){
+      m_isIlluminated=true;
+  }
+
+  return m_isIlluminated;
 };
 
 //------------------------------------------------------------------------------
