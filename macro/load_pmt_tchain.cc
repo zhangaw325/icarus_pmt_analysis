@@ -12,6 +12,7 @@
 // mailto:ascarpell@bnl.gov
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "Utils.h"
 #include "Waveform.h"
 #include "Pmt.h"
 
@@ -32,11 +33,14 @@ void load_pmt_tchain()
 
   // CHANGE THE FILENAME BELOW IF WANT TO USE ONE OTHER FILE FOR YOUR ANALYSIS
   string filename="/media/disk_a/ICARUS/PMT_gainData_20200205_decoded/data_dl1_run1067_1_20200204T225822_dl3_decoded.root";
-  int run=1067; // << CHANGE ACCORDING TO THE FILE USED
-  int subrun=1; // << CHANGE ACCORDING TO THE FILE USED
+  int run=0; // << CHANGE ACCORDING TO THE FILE USED
+  int subrun=0; // << CHANGE ACCORDING TO THE FILE USED
 
   const int nboards=12; // << DO NOT CHANGE!
   const int nchannels=16; // << DO NOT CHANGE!
+
+  utils::get_rundata(filename, run, subrun);
+  cout << run << " " << subrun << endl;
 
 
   //****************************************************************************
@@ -73,7 +77,7 @@ void load_pmt_tchain()
   //
 
 
-  for(int e=0; e<tchain->GetEntries(); e++)
+  for(int e=0; e<1; e++)
   {
     cout << "Processing event: " << e << endl;
 
