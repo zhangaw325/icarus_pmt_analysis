@@ -38,8 +38,15 @@ void load_pmt_tchain()
   RUN my_run(filename);
   int run=my_run.getRun();
   int subrun=my_run.getSubrun();
-  int optical_channel = my_run.getOpticalChannel();
 
+  // We get the optical channel and find if it is straighforwardly invalid
+  int optical_channel = my_run.getOpticalChannel();
+  if(optical_channel < 0)
+  {
+    cout<<"ERROR! Check if the optical channel is correctly identified!"<< endl;
+  }
+
+  // Print out what the macro is doing so far
   cout << "Processing run: " << run << " and subrun: " << subrun << endl;
   cout << "Optical channel is: " << optical_channel << endl;
 
@@ -76,13 +83,14 @@ void load_pmt_tchain()
   // Now it is time to loop over the events
   //
 
-
-  for(int e=0; e<1; e++)
+  int nentries = tchain->GetEntries();
+  nentries =1;
+  for(int e=0; e<nentries; e++)
   {
     cout << "Processing event: " << e << endl;
 
     // WE TAKE THE EVENT
-    tchain->GetEvent(e);
+    tchain->GetEntry(e);
 
     for(int board=0; board<geo::nboards; board++)
     {

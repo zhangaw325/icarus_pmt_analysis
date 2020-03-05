@@ -18,7 +18,12 @@ using namespace std;
 
 class RUN
 {
+
+  //typedef map<int, int> Runinfo_t;
+  //typedef map<int, Runinfo_t> Opticalinfo_t;
+
   public:
+
     RUN();
     RUN(int run, int subrun);
     RUN(string filename);
@@ -28,7 +33,7 @@ class RUN
     void getRundata( string filename, int & run, int & subrun );
     int getRun(){ return m_run; }
     int getSubrun(){ return m_subrun; }
-    int getOpticalChannel(){{ return m_optical_channel; }}
+    int getOpticalChannel();
 
   private:
 
@@ -37,7 +42,10 @@ class RUN
     string m_run_file;
     int m_run;
     int m_subrun;
-    int m_optical_channel;
+    int m_optical_channel=-1;
+    vector<vector<string> > m_dataList;
+
+    //Opticalinfo_t m_optical_map;
 
 };
 

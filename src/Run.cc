@@ -4,12 +4,12 @@
 // mailto:ascarpell@bnl.gov
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "Utils.h"
 #include "Run.h"
 
 RUN::RUN()
 {
-  // Produce association between run-subrun and optical channel
-  this->loadDatabase();
+  //this->loadDatabase();
 };
 
 //------------------------------------------------------------------------------
@@ -18,7 +18,6 @@ RUN::RUN(int run, int subrun)
   : m_run(run)
   , m_subrun(subrun)
 {
-  // Produce association between run-subrun and optical channel
   this->loadDatabase();
 };
 
@@ -30,7 +29,6 @@ RUN::RUN(string filename)
   m_run=0; m_subrun=0;
   this->getRundata(m_run_file, m_run, m_subrun);
 
-  // Produce association between run-subrun and optical channel
   this->loadDatabase();
 };
 
@@ -44,10 +42,64 @@ RUN::~RUN()
 
 void RUN::loadDatabase()
 {
-  // Produce association between run-subrun and optical channel
+  // Load the database with the association between run-subrun and the
+  // optical channel
 
-  m_optical_channel=18;
+
+  utils::CSVReader reader("../dbase/Calibration_20200204.csv");
+  m_dataList = reader.getData();
+
+
+  return;
 }
+
+//------------------------------------------------------------------------------
+
+int RUN::getOpticalChannel()
+{
+  // Produce the association between run-subrun and optical channel
+
+  if( m_dataList.size() == 0)
+  {
+    cout << "ERROR! load a valid CSV file!" << endl;
+  }
+
+  // Explanation of the entries:
+  // vec[0] = run number
+  // vec[1] = real optical channel (the value set in the switch controller)
+  // vec[2] = file start
+  // vec[3] = file end
+  // vec[4] = optical channel list ( a reconversion of the real optical channel)
+  //          value into a list of numbers from 0-17, identical on both east and
+  //          west side. This is correct since I associate the optical channel
+  //          to the absolute pmt number and we have only 180 pmts per file.
+  //          NB: in future, if data are taken from all boards, the list must
+  //          be from 0-35 for all the 36 possible switcher configurations.
+
+  // Skip the first line since it has just the titles of the columns
+  const int nskip = 1;
+  for(size_t i=nskip; i<m_dataList.size(); i++)
+  {
+    vector<string> vec = m_dataList.at(i);
+
+    int run = stoi(vec[0]);
+    int real_opt_ch = stoi(vec[1]);
+    int file_start = stoi(vec[2]);
+    int file_end = stoi(vec[3]);
+    int opt_ch_list =  stoi(vec[4]);
+
+    if(run > m_run){ break; }
+    else if( m_run == run )
+    {
+      if( file_start <= m_subrun & file_end >= m_subrun )
+      {
+        m_optical_channel = opt_ch_list;
+      }
+    }
+  }
+
+  return m_optical_channel;
+};
 
 
 //------------------------------------------------------------------------------

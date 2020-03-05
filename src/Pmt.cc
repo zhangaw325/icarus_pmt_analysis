@@ -67,7 +67,6 @@ bool PMT::isIlluminated( int optical_channel )
   bool m_isIlluminated=false;
 
   int laser_groups=10;
-  optical_channel-=18; // put the optical channel in the range 0-18
 
   // We compare the optical channel with the absolute pmt number.
   // NB: This assumption works only in the case all boards are taken and optical
