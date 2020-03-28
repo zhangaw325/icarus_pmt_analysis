@@ -47,15 +47,17 @@ void Waveform::loadData( Rawdigits_t raw_waveform )
 
 void Waveform::removeBaseline()
 {
-  // Calculate the baseline as the mean values on the last part of the spectrum
-  for(int t=m_nsamples-1; t>m_nsamples-1-n_sample_baseline; t--)
+  // Calculate the baseline as the mean values on the first part of the spectrum
+  n_sample_baseline = 200;
+
+  for(int t=0; t<n_sample_baseline; t++)
   {
     baseline_mean += m_waveform.at(t);
   }
   baseline_mean /= n_sample_baseline;
 
   // Calculate the stdev of the baseline
-  for(int t=m_nsamples-1; t>m_nsamples-1-m_nsamples; t--)
+  for(int t=0; t<n_sample_baseline; t++)
   {
     baseline_width += pow(m_waveform.at(t)-baseline_mean, 2);
   }
@@ -161,7 +163,38 @@ bool Waveform::hasPulse( double n_sigma )
 
   // Better way to find the pulse
 
-  // Noise and reflecting pulses subtraction ?
+  // Noise filter ?
+
+//------------------------------------------------------------------------------
+
+// TODO: move dft in a new fft library
+Waveform::Complex_t Waveform::doFFT(Waveform::Waveform_t m_time_domain)
+{
+    Eigen::FFT<double> fft;
+    Waveform::Complex_t  m_frequency_domain;
+    fft.fwd(m_frequency_domain, m_time_domain);
+    return m_frequency_domain;
+}
+
+TH1D* Waveform::getPowerSpectrum()
+{
+  Waveform::Complex_t m_spectrum = this->Waveform::doFFT(m_waveform);
+  int m_fft_size = int(m_spectrum.size())/2;
+  double max_sampling = m_sampling_freq/2;
+  double freq_res = m_sampling_freq/m_spectrum.size();
+
+  TH1D *h_power = new TH1D("", ";Frequency [MHz];Power",
+                             m_spectrum.size(), 0, m_spectrum.size()*freq_res );
+
+  for(int f=0; f<int(m_spectrum.size()); f++)
+  {
+    double ampls = pow(m_spectrum.at(f).real(), 2)
+                                              + pow(m_spectrum.at(f).imag(), 2);
+    h_power->Fill(f*freq_res, ampls );
+  }
+
+  return h_power;
+}
 
 //------------------------------------------------------------------------------
 
@@ -171,12 +204,45 @@ TH1D* Waveform::getWaveformHist()
   sprintf(hname, "Run%d-Subrun%d-Event%d-Board%d-Channel%d_hist", m_run,
                                          m_subrun, m_event, m_board, m_channel);
 
-  TH1D *hist = new TH1D(hname, hname, m_nsamples,
+  TH1D *hist = new TH1D(hname, ";Time (ns);ADC", m_nsamples,
                                                0, m_nsamples*m_sampling_period);
 
-  for(int t=0; t<m_nsamples; t++){ hist->Fill( t, m_waveform.at(t) ); }
+  for(int t=0; t<m_nsamples; t++){ hist->Fill( t*m_sampling_period,
+                                                           m_waveform.at(t) ); }
 
   return hist;
 };
 
 //------------------------------------------------------------------------------
+
+TH1D* Waveform::getRawWaveformHist()
+{
+  char hname[100];
+  sprintf(hname, "Run%d-Subrun%d-Event%d-Board%d-Channel%d_raw_hist", m_run,
+                                         m_subrun, m_event, m_board, m_channel);
+
+  TH1D *hist = new TH1D(hname, ";Time (ns);ADC", m_nsamples,
+                                               0, m_nsamples*m_sampling_period);
+
+  for(int t=0; t<m_nsamples; t++){ hist->Fill( t*m_sampling_period,
+                                                       m_raw_waveform.at(t) ); }
+
+  return hist;
+};
+
+//------------------------------------------------------------------------------
+
+TH1D* Waveform::getRawWaveformHist()
+{
+  char hname[100];
+  sprintf(hname, "Run%d-Subrun%d-Event%d-Board%d-Channel%d_raw_hist", m_run,
+                                         m_subrun, m_event, m_board, m_channel);
+
+  TH1D *hist = new TH1D(hname, ";Time [ns];ADC", m_nsamples,
+                                               0, m_nsamples*m_sampling_period);
+
+  for(int t=0; t<m_nsamples; t++){ hist->Fill( t*m_sampling_period,
+                                                       m_raw_waveform.at(t) ); }
+
+  return hist;
+};
