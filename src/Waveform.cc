@@ -159,6 +159,22 @@ bool Waveform::hasPulse( double n_sigma )
 
 //------------------------------------------------------------------------------
 
+bool Waveform::isValidWaveform()
+{
+  bool isValid;
+
+  if(m_raw_waveform.size()==0){
+    isValid=false;
+  }
+  else {
+    isValid=true;
+  }
+
+  return isValid;
+}
+
+//------------------------------------------------------------------------------
+
   // Use fit to find the pulse instead
 
   // Better way to find the pulse

@@ -22,18 +22,16 @@
 
 using namespace std;
 
-
-
 void noise_ana()
 {
 
   // CHANGE THE FILENAME BELOW IF WANT TO USE ONE OTHER FILE FOR YOUR ANALYSIS
-  string filename="/media/disk_a/ICARUS/PMTDataMonitoring/data_dl1_run1264_1_20200227T235326-decoded.root";
-  int run=1264; //<< TO BE CHANGE ACCORDING TO THE FILENAME
-  int subrun=1; //<< TO BE CHANGE ACCORDING TO THE FILENAME
+  string filename="../data/noise/run1398_001.root";
+  int run=0.0; int subrun=0.0;
+  utils::get_rundata( filename, run, subrun );
 
-  const int nboards=1;    // << This type of files in /PMTDataMonitoring/ have only one board. CHANGE ONLY IF YOU ARE LOOKING AT ONE OTHER TYPE OF FILE!
-  const int nchannels=16; // << DON'T CHANGE
+  const int nboards=1;
+  const int nchannels=16;
 
   //****************************************************************************
   // Input
@@ -61,11 +59,11 @@ void noise_ana()
       //DEFINE HERE THE HISTOGRAMS. EACH HISTOGRAM SHOULD HAVE A DIFFERENT NAME
       //TO AVOID CONFUSION WHEN YOU SAVE THEM TO FILE.
       char hname[100];
-      sprintf(hname, "hnoise_run%d_00%d_board%d_channel%d", run, subrun, board, channel);
+      sprintf(hname, "hnoise_run%d_00%d_board%d_channel%d",
+                                                   run, subrun, board, channel);
       h_pmt_rms[board][channel]= new TH1D(hname, hname, 20, -20, 20);
     }
   }
-
 
   //****************************************************************************
   // Now it is time to loop over the events
@@ -92,11 +90,7 @@ void noise_ana()
         // "getRawWaveform()" BEFORE BASELINE SUBTRACTION.
         waveform->loadData((*data).at(channel+nchannels*board));
 
-        //LOOP OVER THE RAW WAVEFORM, UNCOMMENT THE LOOP IF NEED TO DO IT
-        //for( float entry : waveform->getWaveform() )
-        //{
-        //  //DO SOMETHING
-        //}
+        if(!waveform->isValidWaveform()){ continue; }
 
         // Loop over the entries of the waveform after the baseline subtraction
         // and fill the entries of the histogram h_pmt_rms
@@ -118,11 +112,19 @@ void noise_ana()
   char ofilename[100]; sprintf(ofilename, "noise_run%d_%d.root", run, subrun);
   TFile ofile(ofilename, "RECREATE"); ofile.cd();
 
+  TGraph *g_rms = new TGraph( nboards*nchannels );
+  char gname[100]; sprintf(gname, "g_rms_run%d_subrun%d", run, subrun);
+  g_rms->SetTitle(gname); g_rms->SetName(gname);
+
   for(int board=0; board<nboards; board++)
   {
     for(int channel=0; channel<nchannels; channel++)
     {
       //Write the histogram to the output TFILE
+      h_pmt_rms[board][channel]->Write();
+
+      g_rms->SetPoint(channel+nchannels*board, channel+nchannels*board,
+                                           h_pmt_rms[board][channel]->GetRMS());
       h_pmt_rms[board][channel]->Write();
     }
   }
@@ -130,15 +132,5 @@ void noise_ana()
   ofile.Close();
 
   cout << "All done" << endl;
-
-  //****************************************************************************
-  //
-  // Now you can open the output file "noise_run%d_00%d.root" using the command:
-  // root -l "noise_run%d_00%d.root". With the TBrowser you should be able to
-  // visualize all the histograms. Alternatively you can create one other root
-  // macro which import this TFILE and make TGraphs with the quantities you find
-  // more relevant.
-  //
-  //****************************************************************************
 
 } //end macro

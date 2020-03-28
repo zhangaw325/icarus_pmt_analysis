@@ -48,6 +48,8 @@ class Waveform
       Rawdigits_t getRawWaveform(){ return m_raw_waveform; };
       Waveform_t getWaveform(){ return m_waveform; };
 
+      bool isValidWaveform();
+
       // Noise
       void removeBaseline();
       double getBaselineMean(){return baseline_mean;};
