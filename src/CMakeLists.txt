@@ -3,6 +3,8 @@
 # Geerate custom dictionaries
 ROOT_GENERATE_DICTIONARY(  CustomClassesDict
                             ../inc/Units.h
+                            ../inc/Utils.h
+                            ../inc/Run.h
                             ../inc/ Pmt.h
                            ../inc/Waveform.h
 	                         LINKDEF
@@ -20,6 +22,8 @@ endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 #Create the CustomClasses library with the ROOT dictionary.
 add_library(  CustomClasses
               SHARED
+              Utils.cc
+              Run.cc
               Pmt.cc
               Waveform.cc
             )

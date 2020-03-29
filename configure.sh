@@ -15,13 +15,6 @@ if [ "${HOSTNAME#*.}" == "fnal.gov" ]; then
   source /cvmfs/fermilab.opensciencegrid.org/products/larsoft/setup
   source /cvmfs/icarus.opensciencegrid.org/products/icarus/setup_icarus.sh
 
-  # Find the location of the eigen heders and replace the value set before
-  EIGEN_INSTALL="/cvmfs/larsoft.opensciencegrid.org/products/eigen/v3_3_5/include/eigen3/"
-
-  # Now setup the latest version of ROOT using ups producs
-  out=( "$(ups list -aK+ root | tail -1)" )
-  line=( $out )
-
   remove_quotes()
   {
     var=$1
@@ -29,10 +22,28 @@ if [ "${HOSTNAME#*.}" == "fnal.gov" ]; then
     temp="${temp#\"}"
     echo "$temp"
   }
+
+  # Find the location of the eigen heders and replace the value set before
+  EIGEN_INSTALL="/cvmfs/larsoft.opensciencegrid.org/products/eigen/v3_3_5/include/eigen3/"
+
+  # Now setup the latest version of Eigen using ups producs
+  out=( "$(ups list -aK+ eigen | tail -1)" )
+  line=( $out )
+  version=$( remove_quotes ${line[1]} )
+  setup eigen -v ${version} -q ${qualifier}
+
+  # Now setup the latest version of ROOT using ups producs
+  out=( "$(ups list -aK+ root | tail -1)" )
+  line=( $out )
   version=$( remove_quotes ${line[1]} )
   qualifier=$( remove_quotes ${line[3]} )
-
   setup root -v ${version} -q ${qualifier}
+
+  #now setup CMAKE
+  out=( "$(ups list -aK+ cmake | tail -1)" )
+  line=( $out )
+  version=$( remove_quotes ${line[1]} )
+  setup cmake -v ${version}
 
 fi
 

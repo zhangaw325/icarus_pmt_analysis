@@ -16,6 +16,7 @@ target_link_libraries(Vector ${ROOT_LIBRARIES})
 
 #Bring the headers
 include_directories(inc)
+include_directories($ENV{EIGEN_INSTALL})
 
 #Add the CMakeLists.txt on the subdirectory
 add_subdirectory(src ${PROJECT_SOURCE_DIR}/build/sourcebuild)

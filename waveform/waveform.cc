@@ -1,11 +1,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Analyze the single waveform and place the results in the PMT histograms
-// Usage: ./build/waveform -i /path/to/decoded_file.root -o /path/to/pmt_file.root
+// Usage:
+//      ./build/waveform -i /path/to/decoded_file.root -o /path/to/pmt_file.root
 //
 // mailto:ascarpell@bnl.gov
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "Geometry.h"
+#include "Run.h"
 #include "Waveform.h"
 #include "Pmt.h"
 
@@ -18,52 +21,8 @@
 
 using namespace std;
 
-//------------------------------------------------------------------------------
-
-PMT* locatePMT(int run, int board, int channel , vector<PMT*> pmts)
-{
-  // Locate a PMT in the PMT array given the channel and board number
-
-  auto find = [&]( PMT *pmt )
-  {
-    return (pmt->getRun()==run && pmt->getBoard()==board
-                                                 && pmt->getChannel()==channel);
-  };
-
-  auto it = std::find_if( pmts.begin(), pmts.end(), find );
-
-  return *it;
-}
-
-//------------------------------------------------------------------------------
-
 int main( int argc, char* argv[] )
 {
-
-  //****************************************************************************
-  // General definitions ( ..import from DB ? )
-
-  int run=1067; // Useless
-  int subrun=11; // Useless
-  const int nboards=12;
-  const int nchannels=16;
-
-  //****************************************************************************
-  // Data structures definitions
-
-  vector<PMT*> pmts;
-
-  for( int board=0; board<nboards; board++ )
-  {
-    for( int channel=0; channel<nchannels; channel++ )
-    {
-      PMT *pmt = new PMT( run, board, channel );
-      pmts.push_back(pmt);
-    }
-  }
-
-  //****************************************************************************
-  // Handle the input and output
 
   // Parse the arguments
   string ifilename, ofilename;
@@ -74,6 +33,33 @@ int main( int argc, char* argv[] )
     else {
       cout << "Unknown option " << argv[i+1] << endl;
       return 1;
+    }
+  }
+
+  // THE RUN CLASS SHOULD ASSIGN THE RIGTH RUN AND SUBRUN NUMBERS ACCORDING TO
+  // THE FILENAME GIVEN
+  RUN my_run(ifilename);
+  int run=my_run.getRun();
+  int subrun=my_run.getSubrun();
+
+  // We get the optical channel and find if it is straighforwardly invalid
+  int optical_channel = my_run.getOpticalChannel();
+  if(optical_channel < 0)
+  {
+    cout<<"ERROR! Check if the optical channel is correctly identified!"<< endl;
+  }
+
+  // Print out what the macro is doing so far
+  cout << "Processing run: " << run << " and subrun: " << subrun << endl;
+  cout << "Optical channel is: " << optical_channel << endl;
+
+  // Initialize the PMT
+  PMT* pmts[geo::nboards][geo::nchannels];
+  for( int board=0; board<geo::nboards; board++ )
+  {
+    for( int channel=0; channel<geo::nchannels; channel++ )
+    {
+      pmts[board][channel] = new PMT( run, board, channel );
     }
   }
 
@@ -94,7 +80,7 @@ int main( int argc, char* argv[] )
   tevents->SetBranchAddress("fWvfmsVec", &data);
 
   //****************************************************************************
-  // Event looper
+  // EVENT LOOPER
 
   for(int event=0; event<nevents; event++)
   {
@@ -106,40 +92,36 @@ int main( int argc, char* argv[] )
 
     tevents->GetEvent(event);
 
-    const int n_samples = (*data)[0].size();
-    const int n_boards = (*data).size()/nchannels;
-
-    for(int board=0; board<n_boards; board++)
+    for(int board=0; board<geo::nboards; board++)
     {
-      for(int channel=0; channel<nchannels; channel++)
+      for(int channel=0; channel<geo::nchannels; channel++)
       {
+
+        // Apply a selection using the optical channel
+        if( pmts[board][channel]->isIlluminated(optical_channel) ){ continue; }
 
         // Create the waveform object and load raw data in
         Waveform *waveform = new Waveform(run, subrun ,event, board, channel);
-        waveform->loadData((*data).at(channel+nchannels*board));
+        waveform->loadData((*data).at(channel+geo::nchannels*board));
 
-        // Other operations on the single waveform
-        // ...
+        if(!waveform->isValidWaveform()){ continue; }
 
         // Extract the signal: hasPulse method enables all the pulse quantities
         if(waveform->hasPulse(1.0))
         {
-          PMT *pmt_temp = locatePMT(run, board, channel, pmts);
-          pmt_temp->loadWaveform(waveform);
+          pmts[board][channel]->loadWaveform(waveform);
         }
 
-      } // end channel
-    } // end board
+        // SOMETHING ELSE TO DO IN THIS LOOP?
 
-    // Other event operations (if applicable)
-    // ...
-
+      }
+    }
   } // end events
 
   ifile->Close();
 
   //****************************************************************************
-  // Now save the PMTs
+  // NOW SAVE THE INFO STORED IN THE PMT CLASS
 
   // Open TFile
   TFile *ofile = new TFile(ofilename.c_str(), "RECREATE");
@@ -150,23 +132,16 @@ int main( int argc, char* argv[] )
   }
   ofile->cd();
 
-  // Now loop over the pmt array and fill the quantities in file
-  for(auto pmtit : pmts)
+  for( int board=0; board<geo::nboards; board++ )
   {
-
-    // Other single pmt analysis (if applicable)
-    // ...
-
-    // Fill the file with the histogram only
-    pmtit->writeHist();
-
+    for( int channel=0; channel<geo::nchannels; channel++ )
+    {
+      pmts[board][channel]->writeHist();
+    }
   }
 
   ofile->Close();
 
-  // Is there anything else to do?
-  // ...
-
-  cout << "All done ..." << endl;
+  cout << "All done!" << endl;
   return 0;
 }
