@@ -12,7 +12,7 @@ The core of the projects depends on:
 * CMake: https://cmake.org/
 Some task-specific scripts may requires some common python packages such as numpy, pandas, and uproot. 
 
-On an experiment dedicated GPVM machine at FNAL, all required packages are found on CVMFS and configurable as ups producs thanks to the  `./configure.sh`. Alternatively, the user should edit the `configure.sh` scripts pointing to their local installation of the required packages. 
+On an experiment dedicated GPVM machine at FNAL, all required packages are found on CVMFS and configurable as ups products thanks to  `./configure.sh`. Alternatively, the user should edit the `configure.sh` scripts pointing to their local installation of the required packages. 
 ### Set up your personal space ### 
 On a GPVM machine at FNAL, the environment is configured simply sourcing `configure.sh`. This must be done any time at relogin. On a personal machine, the user can set his own enviroment by editing `configure.sh` in the most appropriate fashon and sorucing it.
 
