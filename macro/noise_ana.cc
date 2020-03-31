@@ -11,7 +11,7 @@
 //
 // mailto:ascarpell@bnl.gov
 ////////////////////////////////////////////////////////////////////////////////
-
+#include "Run.h"
 #include "Waveform.h"
 #include "Pmt.h"
 
@@ -22,13 +22,13 @@
 
 using namespace std;
 
-void noise_ana()
+void noise_ana( string filename="../data/noise/run1336_001.root" )
 {
 
   // CHANGE THE FILENAME BELOW IF WANT TO USE ONE OTHER FILE FOR YOUR ANALYSIS
-  string filename="../data/noise/run1398_001.root";
-  int run=0.0; int subrun=0.0;
-  utils::get_rundata( filename, run, subrun );
+  RUN my_run(filename);
+  int run=my_run.getRun();
+  int subrun=my_run.getSubrun();
 
   const int nboards=1;
   const int nchannels=16;
@@ -51,6 +51,7 @@ void noise_ana()
   // This is an example, you can create more histograms using this model
 
   TH1D *h_pmt_rms[nboards][nchannels];
+  TH1D *h_pmt_baseline[nboards][nchannels];
 
   for(int board=0; board<nboards; board++)
   {
@@ -59,9 +60,14 @@ void noise_ana()
       //DEFINE HERE THE HISTOGRAMS. EACH HISTOGRAM SHOULD HAVE A DIFFERENT NAME
       //TO AVOID CONFUSION WHEN YOU SAVE THEM TO FILE.
       char hname[100];
-      sprintf(hname, "hnoise_run%d_00%d_board%d_channel%d",
+      sprintf(hname, "hnoise_run%d_00%d_board%d_channel%d_rms",
                                                    run, subrun, board, channel);
-      h_pmt_rms[board][channel]= new TH1D(hname, hname, 20, -20, 20);
+      h_pmt_rms[board][channel]= new TH1D(hname, hname, 40, -20, 20);
+
+      sprintf(hname, "hnoise_run%d_00%d_board%d_channel%d_baseline",
+                                                   run, subrun, board, channel);
+      h_pmt_baseline[board][channel]= new TH1D(hname, hname, 40, 0, -1);
+      h_pmt_baseline[board][channel]->SetBuffer(1);
     }
   }
 
@@ -99,6 +105,8 @@ void noise_ana()
           h_pmt_rms[board][channel]->Fill( entry );
         }
 
+        h_pmt_baseline[board][channel]->Fill( waveform->getBaselineMean() );
+
       } // channel
     } // boards
   } // event
@@ -126,6 +134,7 @@ void noise_ana()
       g_rms->SetPoint(channel+nchannels*board, channel+nchannels*board,
                                            h_pmt_rms[board][channel]->GetRMS());
       h_pmt_rms[board][channel]->Write();
+      h_pmt_baseline[board][channel]->Write();
     }
   }
 

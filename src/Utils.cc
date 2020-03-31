@@ -19,10 +19,8 @@ vector<vector<string> > utils::CSVReader::getData()
      vector<string> vec;
      while (getline(s_stream, token, m_delimeter))
      {
-       //cout << token << endl;
        vec.push_back(token);
      }
-     //cout << vec << endl;
      dataList.push_back(vec);
    }
    // Close the File

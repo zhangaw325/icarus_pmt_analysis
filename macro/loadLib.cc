@@ -36,6 +36,7 @@ void loadLib(){
   gInterpreter->AddIncludePath(includepath.c_str());
 
   // Compile the custom classes
+  gROOT->LoadMacro((currentdir+"/../src/Utils.cc+").c_str());
   gROOT->LoadMacro((currentdir+"/../src/Run.cc+").c_str());
   gROOT->LoadMacro((currentdir+"/../src/Waveform.cc+").c_str());
   gROOT->LoadMacro((currentdir+"/../src/Pmt.cc+").c_str());

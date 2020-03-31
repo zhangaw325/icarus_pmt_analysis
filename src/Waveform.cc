@@ -48,7 +48,7 @@ void Waveform::loadData( Rawdigits_t raw_waveform )
 void Waveform::removeBaseline()
 {
   // Calculate the baseline as the mean values on the first part of the spectrum
-  n_sample_baseline = 200;
+  n_sample_baseline = m_nsamples;
 
   for(int t=0; t<n_sample_baseline; t++)
   {
@@ -183,7 +183,6 @@ bool Waveform::isValidWaveform()
 
 //------------------------------------------------------------------------------
 
-// TODO: move dft in a new fft library
 Waveform::Complex_t Waveform::doFFT(Waveform::Waveform_t m_time_domain)
 {
     Eigen::FFT<double> fft;
