@@ -22,7 +22,7 @@
 
 using namespace std;
 
-void noise_ana( string filename="/pnfs/icarus/persistent/users/aw325/PMT_gainData_20200124_decoded/run462_01.root" )
+void charge_ana( string filename="../process20191121data/run207_01.root" )
 {
 
   // CHANGE THE FILENAME BELOW IF WANT TO USE ONE OTHER FILE FOR YOUR ANALYSIS
@@ -50,8 +50,16 @@ void noise_ana( string filename="/pnfs/icarus/persistent/users/aw325/PMT_gainDat
   // Now we create and initialize an histogram per each board and channel
   // This is an example, you can create more histograms using this model
 
+  // baseline is really the basics for further processing the waveforms
   TH1D *h_pmt_rms[nboards][nchannels];
   TH1D *h_pmt_baseline[nboards][nchannels];
+
+  // then we will want to look at waveforms characteristics:
+  //     charge, amplitude, pulse time, number of pulse (for rate), etc.
+  TH1D *h_pmt_charge[nboards][nchannels]; 
+  TH1F* h_pmt_amplitude[nboards][nchannels];
+  TH1F* h_pmt_pulsetime[nboards][nchannels];
+  TH1F* h_pmt_NbOfPulses[nboards][nchannels];
 
   for(int board=0; board<nboards; board++)
   {
@@ -68,6 +76,8 @@ void noise_ana( string filename="/pnfs/icarus/persistent/users/aw325/PMT_gainDat
                                                    run, subrun, board, channel);
       h_pmt_baseline[board][channel]= new TH1D(hname, hname, 40, 0, -1);
       h_pmt_baseline[board][channel]->SetBuffer(1);
+
+      
     }
   }
 
