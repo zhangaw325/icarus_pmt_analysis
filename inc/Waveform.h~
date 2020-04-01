@@ -44,7 +44,7 @@ class Waveform
       int getEvent(){ return m_event; }
       int getBoard(){ return m_board; }
       int getChannel(){ return m_channel; }
-      int getNSamples(){return m_nsamples; } // number of samples in one waveform
+      int getNSamples(){return m_nsample; } // number of samples in one waveform
 
       Rawdigits_t getRawWaveform(){ return m_raw_waveform; };
       Waveform_t getWaveform(){ return m_waveform; };

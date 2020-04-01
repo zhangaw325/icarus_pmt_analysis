@@ -57,9 +57,9 @@ void charge_ana( string filename="../process20191121data/run207_01.root" )
   // then we will want to look at waveforms characteristics:
   //     charge, amplitude, pulse time, number of pulse (for rate), etc.
   TH1D *h_pmt_charge[nboards][nchannels]; 
-  TH1F* h_pmt_amplitude[nboards][nchannels];
-  TH1F* h_pmt_pulsetime[nboards][nchannels];
-  TH1F* h_pmt_NbOfPulses[nboards][nchannels];
+  TH1D* h_pmt_amplitude[nboards][nchannels];
+  TH1D* h_pmt_pulsetime[nboards][nchannels];
+  TH1D* h_pmt_NbOfPulses[nboards][nchannels];
 
   for(int board=0; board<nboards; board++)
   {
@@ -77,7 +77,26 @@ void charge_ana( string filename="../process20191121data/run207_01.root" )
       h_pmt_baseline[board][channel]= new TH1D(hname, hname, 40, 0, -1);
       h_pmt_baseline[board][channel]->SetBuffer(1);
 
-      
+      // for charge histograms
+      sprintf(hname, "hQ_run%d_%d_board%d_ch%d", run, subrun, board, channel);
+      h_pmt_charge[board][channel] = new TH1D(hname, hname, 200,0,100);
+      h_pmt_charge[board][channel]->SetXTitle("Charge (pC)");
+      h_pmt_charge[board][channel]->SetYTitle("Counts");
+      // for amplitude histograms
+      sprintf(hname, "hAmp_run%d_%d_board%d_ch%d", run, subrun, board, channel);
+      h_pmt_amplitude[board][channel] = new TH1D(hname, hname, 500,0,5000);
+      h_pmt_amplitude[board][channel]->SetXTitle("Amplitude (ADC count)");
+      h_pmt_amplitude[board][channel]->SetYTitle("Counts");
+      // for pulse time
+      sprintf(hname, "hPulseTime_run%d_%d_board%d_ch%d", run, subrun, board, channel);
+      h_pmt_pulsetime[board][channel] = new TH1D(hname, hname, 500,400,500);
+      h_pmt_pulsetime[board][channel]->SetXTitle("Pulse start time (ns)");
+      h_pmt_pulsetime[board][channel]->SetYTitle("Counts");
+      // for number of pulse couting
+      sprintf(hname, "hPulseCounting_run%d_%d_board%d_ch%d", run, subrun, board, channel);
+      h_pmt_NbOfPulses[board][channel] = new TH1D(hname, hname, 15,0,15);
+      h_pmt_NbOfPulses[board][channel]->SetXTitle("Number of pulses in the time set window");
+      h_pmt_NbOfPulses[board][channel]->SetYTitle("Counts");
     }
   }
 
