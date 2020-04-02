@@ -19,7 +19,8 @@ void loadLib(){
   // For some reasons ROOT has not a dictionary for vector of vectors
   gInterpreter->GenerateDictionary("vector<vector<unsigned short>>", "vector");
 
-  char *eigen_install = getenv("EIGEN_INSTALL");
+  const char *eigen_install = getenv("EIGEN_INSTALL");
+  cout<< eigen_install << endl;
   if(eigen_install == NULL)
   {
     cout << " Set the EIGEN_INSTALL variable! " << endl;

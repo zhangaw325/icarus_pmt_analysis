@@ -1,0 +1,6 @@
+{ decls }
+namespace std {  }
+
+[ libVector.so ]
+# List of selected classes
+class vector<vector<unsigned short> >
