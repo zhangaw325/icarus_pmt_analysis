@@ -22,11 +22,15 @@
 
 using namespace std;
 
-void charge_ana( string filename="../process20191121data/run207_01.root" )
+void charge_ana( string filename="run207_filenamelist.txt" )
 {
 
   // CHANGE THE FILENAME BELOW IF WANT TO USE ONE OTHER FILE FOR YOUR ANALYSIS
-  RUN my_run(filename);
+  fstream fin(filename.c_str());
+  string firstfilename = "";
+  getline(fin, firstfilename);
+  fin.close();
+  RUN my_run(firstfilename);
   int run=my_run.getRun();
   int subrun=my_run.getSubrun();
 
@@ -40,7 +44,14 @@ void charge_ana( string filename="../process20191121data/run207_01.root" )
   TChain *tchain =  new TChain("caenv1730dump/events");
 
   // HERE you filename is loaded inside the macro to be processed!
-  tchain->Add(filename.c_str());
+  fstream fin1(filename.c_str());
+  int nbOfFileCnt=0;
+  while(fin1>>firstfilename){
+    tchain->Add(firstfilename.c_str());
+    nbOfFileCnt++;
+  }
+  fin1.close();
+  cout<<"Processing run "<< run << ", with "<< nbOffFileCnt <<" files ..."<<endl;
 
   std::vector<std::vector<uint16_t> > *data=0; //unsigned short
   tchain->SetBranchAddress("fWvfmsVec", &data);
@@ -146,11 +157,11 @@ void charge_ana( string filename="../process20191121data/run207_01.root" )
   // Output: create an output TFile and write the histogram in it
   //
 
-  char ofilename[100]; sprintf(ofilename, "noise_run%d_%d.root", run, subrun);
+  char ofilename[100]; sprintf(ofilename, "noise_run%d_charge_result.root", run);
   TFile ofile(ofilename, "RECREATE"); ofile.cd();
 
   TGraph *g_rms = new TGraph( nboards*nchannels );
-  char gname[100]; sprintf(gname, "g_rms_run%d_subrun%d", run, subrun);
+  char gname[100]; sprintf(gname, "g_rms_run%d_", run);
   g_rms->SetTitle(gname); g_rms->SetName(gname);
 
   for(int board=0; board<nboards; board++)
