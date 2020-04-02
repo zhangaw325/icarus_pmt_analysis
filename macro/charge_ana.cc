@@ -19,6 +19,8 @@
 #include "TTree.h"
 #include "TChain.h"
 #include "TH1D.h"
+#include "TDirectory.h"
+#include "TGraph.h"
 
 using namespace std;
 
@@ -51,7 +53,7 @@ void charge_ana( string filename="run207_filenamelist.txt" )
     nbOfFileCnt++;
   }
   fin1.close();
-  cout<<"Processing run "<< run << ", with "<< nbOffFileCnt <<" files ..."<<endl;
+  cout<<"Processing run "<< run << ", with "<< nbOfFileCnt <<" files ..."<<endl;
 
   std::vector<std::vector<uint16_t> > *data=0; //unsigned short
   tchain->SetBranchAddress("fWvfmsVec", &data);
@@ -79,11 +81,11 @@ void charge_ana( string filename="run207_filenamelist.txt" )
       //DEFINE HERE THE HISTOGRAMS. EACH HISTOGRAM SHOULD HAVE A DIFFERENT NAME
       //TO AVOID CONFUSION WHEN YOU SAVE THEM TO FILE.
       char hname[100];
-      sprintf(hname, "hnoise_run%d_00%d_board%d_channel%d_rms",
+      sprintf(hname, "hAllWaveBaseline_run%d_00%d_board%d_channel%d_rms",
                                                    run, subrun, board, channel);
       h_pmt_rms[board][channel]= new TH1D(hname, hname, 40, -20, 20);
 
-      sprintf(hname, "hnoise_run%d_00%d_board%d_channel%d_baseline",
+      sprintf(hname, "hMeanBaseline_run%d_00%d_board%d_channel%d_baseline",
                                                    run, subrun, board, channel);
       h_pmt_baseline[board][channel]= new TH1D(hname, hname, 40, 0, -1);
       h_pmt_baseline[board][channel]->SetBuffer(1);
@@ -117,8 +119,10 @@ void charge_ana( string filename="run207_filenamelist.txt" )
 
   for(int e=0; e<tchain->GetEntries(); e++)
   {
-    if(e%100 ==0)
-      cout << "Processing event: " << e << endl;
+    if(e%1000 ==0)
+      cout << "         evt: " << e << endl;
+
+    if(e==1000) break;
 
     // WE TAKE THE EVENT
     tchain->GetEvent(e);
@@ -143,26 +147,34 @@ void charge_ana( string filename="run207_filenamelist.txt" )
         // and fill the entries of the histogram h_pmt_rms
         for( float entry : waveform->getWaveform() )
         {
-          h_pmt_rms[board][channel]->Fill( entry );
+          h_pmt_rms[board][channel]->Fill( entry ); // this is distribution of baseline
         }
 
-        h_pmt_baseline[board][channel]->Fill( waveform->getBaselineMean() );
+        // this is distribution of mean baseline from waveforms
+        h_pmt_baseline[board][channel]->Fill( waveform->getBaselineMean() ); 
 
       } // channel
     } // boards
   } // event
-
+  cout<<"      total events "<< tchain->GetEntries() <<endl;
 
 
   //****************************************************************************
   // Output: create an output TFile and write the histogram in it
   //
 
-  char ofilename[100]; sprintf(ofilename, "noise_run%d_charge_result.root", run);
+  char ofilename[100]; sprintf(ofilename, "Result_run%d_charge.root", run);
   TFile ofile(ofilename, "RECREATE"); ofile.cd();
 
+  TDirectory* baselineDir = ofile.mkdir("baselineDir");
+  TDirectory* noiseDir = ofile.mkdir("noiseDir");
+//  TDirectory* chargeDir = new TDirectory("chargeDir","chargeDirT");
+//  TDirectory* timeDir = new TDirectory("timeDir","timeDirT");
+
   TGraph *g_rms = new TGraph( nboards*nchannels );
-  char gname[100]; sprintf(gname, "g_rms_run%d_", run);
+  char gname[100]; sprintf(gname, "g_rmsBaselineDist_run%d_", run);
+  // this is the rms of the distribution of baseline, 
+  // it is a measure of noise in the waveform
   g_rms->SetTitle(gname); g_rms->SetName(gname);
 
   for(int board=0; board<nboards; board++)
@@ -170,10 +182,11 @@ void charge_ana( string filename="run207_filenamelist.txt" )
     for(int channel=0; channel<nchannels; channel++)
     {
       //Write the histogram to the output TFILE
-      h_pmt_rms[board][channel]->Write();
-
+      
+      noiseDir->cd();
       g_rms->SetPoint(channel+nchannels*board, channel+nchannels*board,
                                            h_pmt_rms[board][channel]->GetRMS());
+      baselineDir->cd();
       h_pmt_rms[board][channel]->Write();
       h_pmt_baseline[board][channel]->Write();
     }
