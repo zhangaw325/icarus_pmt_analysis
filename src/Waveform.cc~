@@ -12,19 +12,20 @@ Waveform::Waveform(){};
 
 //------------------------------------------------------------------------------
 
-Waveform::Waveform(int run, int subrun, int event, int board, int channel)
+Waveform::Waveform(int run, int subrun, int event, int board, int channel, double n_sigma)
   : m_run(run)
   , m_subrun(subrun)
   , m_event(event)
   , m_board(board)
   , m_channel(channel)
+  , m_nsigma(n_sigma)
 { };
 
 //------------------------------------------------------------------------------
 
-Waveform::Waveform( int run, int subrun, int event ,int board, int channel,
+Waveform::Waveform( int run, int subrun, int event ,int board, int channel, double n_sigma,
                                                       Rawdigits_t raw_waveform )
-  : Waveform(run, subrun, event, board, channel)
+  : Waveform(run, subrun, event, board, channel, n_sigma)
 {
   this->loadData(raw_waveform);
 };
@@ -40,12 +41,15 @@ void Waveform::loadData( Rawdigits_t raw_waveform )
   m_nsamples=int(raw_waveform.size());
   m_raw_waveform = raw_waveform;
   for( auto w : raw_waveform ){ m_waveform.push_back( double(w) ); }
-  removeBaseline();
+  BaselineSubtraction();
+  if(hasPulse(m_nsigma)){
+    ComputePulseCharacteristics();
+  }
 };
 
 //------------------------------------------------------------------------------
 
-void Waveform::removeBaseline()
+void Waveform::BaselineSubtraction()
 {
   // Calculate the baseline as the mean values on the first part of the spectrum
   n_sample_baseline = m_nsamples;
@@ -106,11 +110,17 @@ bool Waveform::hasPulse( double n_sigma )
   // Define the Pulse region of the signal as the region with >n consecutive
   // counts above a threshold expressed in number of sigmas.
 
+  // this will find the first pulse
+  //    (1) with n_counts consecutive samples above threshold
+  //        the threshold is defined as n_sigma*baseline_width
+
   bool has_pulse=false;
   int counts=0;
   int n_counts=5.0;
 
-  int t_start=0, t_end=0;
+  //int t_start=0, t_end=0;
+  m_start_time=0.0;
+  m_end_time=0.0;
 
   for(int t=0; t<m_nsamples; t++)
   {
@@ -119,43 +129,59 @@ bool Waveform::hasPulse( double n_sigma )
     if( abs(value) > n_sigma*baseline_width )
     {
       counts++;
-      if( counts==1 ){ t_start=t-2; }
+      if( counts==1 ){ m_start_time=t-2; }
     }
     else
     {
       // if it is a pulse region, then this is the ending clause
-      if( counts>n_counts && t_start>0 )
+      if( counts>n_counts && m_start_time>0 )
       {
-        t_end=t+3;
+        m_end_time=t+3;
         has_pulse=true;
         break; // Force to have only one pulse
       }
       else
       {
         // reset everything
-        counts=0; t_start=0; t_end=0;
+        counts=0; m_start_time=0; m_end_time=0;
       }
     }
   }
 
-  // If no pulse is found, we end the games here..
-  if( !has_pulse ) { return has_pulse; }
+//  // If no pulse is found, we end the games here..
+//  if( !has_pulse ) { return has_pulse; }
 
   // Here we define the characteristics of the pulse
-  double amp = 0., charge=0;
-  for( int t=t_start; t<t_end; t++ )
-  {
-    if( m_waveform.at(t) < amp ){ amp = m_waveform.at(t); }
-    charge += abs(m_waveform.at(t));
-  }
-
-  m_start_time = t_start;
-  m_width = (t_end-t_start);
-  m_amplitude = amp;
-  m_integral = charge;
 
   return has_pulse;
 };
+
+//------------------------------------------------------------------------------
+void Waveform::ComputePulseCharacteristics(){
+
+  // this will give amplitude, charge, pulse width of the first pulse
+  double amp = 0., charge=0;
+  
+  for( int t=m_start_time; t<m_end_time; t++ )
+  {
+    if( m_waveform.at(t) < amp ){ amp = m_waveform.at(t); m_peak_time = t; }
+    charge += abs(m_waveform.at(t));
+  }
+
+  m_width = (m_end_time-m_start_time);
+  m_amplitude = amp;
+  m_integral = charge * 0.02; // the Q converting factor
+
+  // we count for number of pulses in a separate function
+  CountingPulses();
+}
+
+//------------------------------------------------------------------------------
+void Waveform::CountingPulses(){
+  // to be developped
+  // ideally we want to save time, amplitude, charge of each pulse in a waveform
+  m_npulse = 1;
+}
 
 //------------------------------------------------------------------------------
 

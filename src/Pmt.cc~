@@ -132,15 +132,16 @@ void PMT::loadWaveform( Waveform *waveform )
 
 //------------------------------------------------------------------------------
 
-void PMT::writeHist(TFile* thefile)
+void PMT::writeHist(TFile* thefile, TDirectory* ampDir, TDirectory* chargeDir)
 {
   
-  TDirectory* ampDir = thefile->mkdir("AmplitudeDir");
-  TDirectory* chargeDir = thefile->mkdir("ChargeDir");
-
   // Write the histograms to file
+  ampDir->cd();
   h_amplitude->Write();
   h_amplitude_low->Write();
+
+  chargeDir->cd();
+  h_charge->Write();
 
 };
 

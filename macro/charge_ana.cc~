@@ -24,11 +24,11 @@
 
 using namespace std;
 
-void charge_ana( string filename="run207_filenamelist.txt" )
+void charge_ana( string filename="run207_filenamelist.txt", string hvtablefile="run207_HV.txt" )
 {
 
   // CHANGE THE FILENAME BELOW IF WANT TO USE ONE OTHER FILE FOR YOUR ANALYSIS
-  fstream fin(filename.c_str());
+  fstream fin(filename.c_str(), ios::in);
   string firstfilename = "";
   getline(fin, firstfilename);
   fin.close();
@@ -39,6 +39,18 @@ void charge_ana( string filename="run207_filenamelist.txt" )
   const int nboards=1;
   const int nchannels=16;
   const double nsigma = 5.0;
+
+  // set a hv table to the PMTs
+  double hvtable[nboards][nchannels];
+  fstream finHV(hvtablefile.c_str(), ios::in);
+  double hv_value;
+  for(int board=0; board<nboards; board++){
+    for(int ch=0; ch<nchannels; ch++){
+      finHV>>hv_value;
+      hvtable[board][ch]=hv_value;
+    }
+  }
+  finHV.close();
 
   //****************************************************************************
   // Input
@@ -107,13 +119,13 @@ void charge_ana( string filename="run207_filenamelist.txt" )
   // can define also other objects (like TH1D classes) in here. See macro
   // noise_ana.cc with an example
   //
-
   PMT* pmts[nboards][nchannels];
   for( int board=0; board<nboards; board++ )
   {
     for( int channel=0; channel<nchannels; channel++ )
     {
       pmts[board][channel] = new PMT( run, board, channel );
+      pmts[board][channel]->setHV(hvtable[board][channel]);
     }
   }
 
@@ -206,10 +218,15 @@ void charge_ana( string filename="run207_filenamelist.txt" )
 
   TDirectory* ampDir = ofile->mkdir("AmplitudeDir");
   TDirectory* chargeDir = ofile->mkdir("ChargeDir");
-  for( int board=0; board<geo::nboards; board++ )
+  for( int board=0; board<nboards; board++ )
   {
-    for( int channel=0; channel<geo::nchannels; channel++ )
+    for( int channel=0; channel<nchannels; channel++ )
     {
+      if( pmts[board][channel]->isHVon() ){
+        //pmts[board][channel]->FitChargeSpectrum();
+         double this_hv_value = pmts[board][channel]->getHVvalue();
+         cout<< "HV on for board "<<board<<", ch "<<channel<<": "<<this_hv_value<<endl;
+      }
       pmts[board][channel]->writeHist(ofile, ampDir, chargeDir);
     }
   }  

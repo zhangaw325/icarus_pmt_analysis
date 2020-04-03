@@ -69,7 +69,7 @@ void PMT::initHist()
   h_pulsepeaktime->SetYTitle("Counts");
   // for number of pulse couting
   sprintf(hname, "hPulseCounting_board%d_ch%d", m_board, m_channel);
-  h_NbOfPulse = new TH1D(hname, hname, 15,0,15);
+  h_NbOfPulse = new TH1I(hname, hname, 15,0,15);
   h_NbOfPulse->SetXTitle("Number of pulses in the time set window");
   h_NbOfPulse->SetYTitle("Counts");
   
@@ -132,12 +132,9 @@ void PMT::loadWaveform( Waveform *waveform )
 
 //------------------------------------------------------------------------------
 
-void PMT::writeHist(TFile* thefile)
+void PMT::writeHist(TFile* thefile, TDirectory* ampDir, TDirectory* chargeDir)
 {
   
-  TDirectory* ampDir = thefile->mkdir("AmplitudeDir");
-  TDirectory* chargeDir = thefile->mkdir("ChargeDir");
-
   // Write the histograms to file
   ampDir->cd();
   h_amplitude->Write();

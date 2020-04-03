@@ -30,8 +30,8 @@ class Waveform
       typedef vector<complex<double>> Complex_t;
 
       Waveform();
-      Waveform(int run, int subrun, int event ,int board, int channel);
-      Waveform( int run, int subrun, int event ,int board, int channel,
+      Waveform(int run, int subrun, int event ,int board, int channel, double n_sigma);
+      Waveform( int run, int subrun, int event ,int board, int channel, double n_sigma,
                                                      Rawdigits_t raw_waveform );
       ~Waveform();
 
@@ -39,6 +39,8 @@ class Waveform
       void loadData( Rawdigits_t raw_waveform );
       // process a raw waveform
       void BaselineSubtraction();
+      void ComputePulseCharacteristics();
+      void CountingPulses();
 
       // Getters
       int getRun(){ return m_run; }
@@ -49,7 +51,7 @@ class Waveform
       int getNSamples(){return m_nsamples; } // number of samples in one waveform
 
       double getStartTime(){ return m_start_time; }
-      double getPeakTime(){return m_pean_time; }
+      double getPeakTime(){return m_peak_time; }
       double getWidth(){ return m_width; };
       double getAmplitude(){ return m_amplitude; }
       double getCharge(){ return m_integral; }
@@ -94,12 +96,14 @@ class Waveform
       Waveform_t m_waveform;
 
       double m_start_time=0.0;
+      double m_end_time=0.0;
       double m_peak_time=0.0;
       double m_width=0.0; // pulse width
       double m_amplitude=0.0; // amplitude in ADC count
       double m_integral=0.0;  // charge in unit?
       int m_npulse = 0;
       //double m_charge=0.0;
+      double m_nsigma=0;
 
 
 };
