@@ -38,6 +38,7 @@ void charge_ana( string filename="run207_filenamelist.txt" )
 
   const int nboards=1;
   const int nchannels=16;
+  const double nsigma = 5.0;
 
   //****************************************************************************
   // Input
@@ -136,13 +137,15 @@ void charge_ana( string filename="run207_filenamelist.txt" )
       {
 
         // Create the WAVEFORM OBJECT
-        Waveform *waveform = new Waveform(run, subrun ,e, board, channel);
+        Waveform *waveform = new Waveform(run, subrun ,e, board, channel, nsigma);
 
         // ONCE THE DATA ARE LOADED IN THE WAVEFORM OBJECT, BASELINE IS
         // AUTOMATICALLY SUBSTRACTED. YOU CAN USE THE FUNCTION "getWaveform()"
         // TO EXTRACT THE WAVEFORM VECTOR AFTER BASELINE SUBTRACTION OR
         // "getRawWaveform()" BEFORE BASELINE SUBTRACTION.
         waveform->loadData((*data).at(channel+nchannels*board));
+
+        pmts[board][channel]->loadWaveform(waveform);
 
         if(!waveform->isValidWaveform()){ continue; }
 
@@ -200,6 +203,16 @@ void charge_ana( string filename="run207_filenamelist.txt" )
   g_rms->Draw("ALP"); g_rms->SetMarkerStyle(7);
   cNoise->Write();
   cNoise->Close();
+
+  TDirectory* ampDir = ofile->mkdir("AmplitudeDir");
+  TDirectory* chargeDir = ofile->mkdir("ChargeDir");
+  for( int board=0; board<nboards; board++ )
+  {
+    for( int channel=0; channel<nchannels; channel++ )
+    {
+      pmts[board][channel]->writeHist(ofile, ampDir, chargeDir);
+    }
+  }  
 
   ofile->Close();
 
