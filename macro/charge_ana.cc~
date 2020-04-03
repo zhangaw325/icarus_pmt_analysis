@@ -81,17 +81,26 @@ void charge_ana( string filename="run207_filenamelist.txt" )
       //DEFINE HERE THE HISTOGRAMS. EACH HISTOGRAM SHOULD HAVE A DIFFERENT NAME
       //TO AVOID CONFUSION WHEN YOU SAVE THEM TO FILE.
       char hname[100];
-      sprintf(hname, "hAllWaveBaseline_run%d_00%d_board%d_channel%d_rms",
-                                                   run, subrun, board, channel);
-      h_pmt_rms[board][channel]= new TH1D(hname, hname, 40, -20, 20);
+      char htitle[100];
+      sprintf(hname, "hAllWaveBaseline_run%d_board%d_channel%d_rms",
+                                                   run, board, channel);
+      sprintf(htitle, "Waveform sample value distribution run%d board%d ch%d",
+                                                   run, board, channel);
+      h_pmt_rms[board][channel]= new TH1D(hname, htitle, 40, -20, 20);      
+      h_pmt_rms[board][channel]->SetXTitle("Values (ADC count)");
+      h_pmt_rms[board][channel]->SetYTitle("Counts");
 
-      sprintf(hname, "hMeanBaseline_run%d_00%d_board%d_channel%d_baseline",
-                                                   run, subrun, board, channel);
-      h_pmt_baseline[board][channel]= new TH1D(hname, hname, 40, 0, -1);
+      sprintf(hname, "hMeanBaseline_run%d_board%d_channel%d_baseline",
+                                                   run, board, channel);
+      sprintf(htitle, "Mean baselie of waveforms run%d board%d ch%d",
+                                                   run, board, channel);
+      h_pmt_baseline[board][channel]= new TH1D(hname, htitle, 40, 0, -1);
       h_pmt_baseline[board][channel]->SetBuffer(1);
+      h_pmt_baseline[board][channel]->SetXTitle("Mean baseline of waveforms (ADC count)");
+      h_pmt_baseline[board][channel]->SetYTitle("Count");
 
       // for charge histograms
-      sprintf(hname, "hQ_run%d_%d_board%d_ch%d", run, subrun, board, channel);
+      sprintf(hname, "hQ_run%d_board%d_ch%d", run , board, channel);
       h_pmt_charge[board][channel] = new TH1D(hname, hname, 200,0,100);
       h_pmt_charge[board][channel]->SetXTitle("Charge (pC)");
       h_pmt_charge[board][channel]->SetYTitle("Counts");
@@ -114,6 +123,21 @@ void charge_ana( string filename="run207_filenamelist.txt" )
   }
 
   //****************************************************************************
+  // Here we create and initialize a vector with the class PMT. If you want you
+  // can define also other objects (like TH1D classes) in here. See macro
+  // noise_ana.cc with an example
+  //
+
+  PMT* pmts[nboards][nchannels];
+  for( int board=0; board<nboards; board++ )
+  {
+    for( int channel=0; channel<nchannels; channel++ )
+    {
+      pmts[board][channel] = new PMT( run, board, channel );
+    }
+  }
+
+  //****************************************************************************
   // Now it is time to loop over the events
   //
 
@@ -121,6 +145,8 @@ void charge_ana( string filename="run207_filenamelist.txt" )
   {
     if(e%1000 ==0)
       cout << "         evt: " << e << endl;
+
+    if(e==1000) break;
 
     // WE TAKE THE EVENT
     tchain->GetEvent(e);
@@ -162,10 +188,11 @@ void charge_ana( string filename="run207_filenamelist.txt" )
   //
 
   char ofilename[100]; sprintf(ofilename, "Result_run%d_charge.root", run);
-  TFile ofile(ofilename, "RECREATE"); ofile.cd();
+  TFile* ofile=new TFile(ofilename, "RECREATE"); //
+  ofile->cd();
 
-  TDirectory* baselineDir = ofile.mkdir("baselineDir");
-  TDirectory* noiseDir = ofile.mkdir("noiseDir");
+  TDirectory* baselineDir = ofile->mkdir("baselineDir");
+  TDirectory* noiseDir = ofile->mkdir("noiseDir");
 //  TDirectory* chargeDir = new TDirectory("chargeDir","chargeDirT");
 //  TDirectory* timeDir = new TDirectory("timeDir","timeDirT");
 
@@ -180,8 +207,7 @@ void charge_ana( string filename="run207_filenamelist.txt" )
     for(int channel=0; channel<nchannels; channel++)
     {
       //Write the histogram to the output TFILE
-      
-      noiseDir->cd();
+
       g_rms->SetPoint(channel+nchannels*board, channel+nchannels*board,
                                            h_pmt_rms[board][channel]->GetRMS());
       baselineDir->cd();
@@ -190,8 +216,15 @@ void charge_ana( string filename="run207_filenamelist.txt" )
     }
   }
 
-  ofile.Close();
+  noiseDir->cd();
+  TCanvas* cNoise = new TCanvas();
+  g_rms->Draw("ALP"); g_rms->SetMarkerStyle(7);
+  cNoise->Write();
+  cNoise->Close();
+
+  ofile->Close();
 
   cout << "All done" << endl;
+  exit(0);
 
 } //end macro

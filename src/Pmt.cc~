@@ -139,12 +139,8 @@ void PMT::writeHist(TFile* thefile)
   TDirectory* chargeDir = thefile->mkdir("ChargeDir");
 
   // Write the histograms to file
-  ampDir->cd();
   h_amplitude->Write();
   h_amplitude_low->Write();
-
-  chargeDir->cd();
-  h_charge->Write();
 
 };
 

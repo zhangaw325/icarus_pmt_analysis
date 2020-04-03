@@ -40,12 +40,12 @@ void Waveform::loadData( Rawdigits_t raw_waveform )
   m_nsamples=int(raw_waveform.size());
   m_raw_waveform = raw_waveform;
   for( auto w : raw_waveform ){ m_waveform.push_back( double(w) ); }
-  BaselineSubtraction();
+  removeBaseline();
 };
 
 //------------------------------------------------------------------------------
 
-void Waveform::BaselineSubtraction()
+void Waveform::removeBaseline()
 {
   // Calculate the baseline as the mean values on the first part of the spectrum
   n_sample_baseline = m_nsamples;

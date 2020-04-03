@@ -37,6 +37,8 @@ class Waveform
 
       // Import data
       void loadData( Rawdigits_t raw_waveform );
+      // process a raw waveform
+      void removeBaseline();
 
       // Getters
       int getRun(){ return m_run; }
@@ -44,27 +46,28 @@ class Waveform
       int getEvent(){ return m_event; }
       int getBoard(){ return m_board; }
       int getChannel(){ return m_channel; }
-      int getNSamples(){return m_nsample; } // number of samples in one waveform
+      int getNSamples(){return m_nsamples; } // number of samples in one waveform
+
+      double getStartTime(){ return m_start_time; }
+      double getPeakTime(){return m_pean_time; }
+      double getWidth(){ return m_width; };
+      double getAmplitude(){ return m_amplitude; }
+      double getCharge(){ return m_integral; }
+      int getNPulses() {return m_npulse; }
 
       Rawdigits_t getRawWaveform(){ return m_raw_waveform; };
       Waveform_t getWaveform(){ return m_waveform; };
 
-      bool isValidWaveform();
-
-      // Noise
-      void removeBaseline();
       double getBaselineMean(){return baseline_mean;};
       double getBaselineWidth(){return baseline_width;}
+
+      // Noise
       Complex_t doFFT(Waveform_t m_time_domain);
 
       // Indentify and characterize pulses
+      bool isValidWaveform();
       bool hasSignal(double n_sigma);
       bool hasPulse(double n_sigma);
-
-      double getStartTime(){ return m_start_time; };
-      double getWidth(){ return m_width; };
-      double getAmplitude(){ return m_amplitude; }
-      double getIntegral(){ return m_integral; }
 
       // Helpers
       bool find(int run, int subrun, int event, int board, int channel );
@@ -79,7 +82,6 @@ class Waveform
       int m_event;
       int m_board;
       int m_channel;
-
       int m_nsamples;
       double m_sampling_period=2.; //in ns
       double m_sampling_freq = (1./m_sampling_period)*1e3; //in MHz
@@ -92,10 +94,12 @@ class Waveform
       Waveform_t m_waveform;
 
       double m_start_time=0.0;
-      double m_width=0.0;
-      double m_amplitude=0.0;
-      double m_integral=0.0;
-      double m_charge=0.0;
+      double m_peak_time=0.0;
+      double m_width=0.0; // pulse width
+      double m_amplitude=0.0; // amplitude in ADC count
+      double m_integral=0.0;  // charge in unit?
+      int m_npulse = 0;
+      //double m_charge=0.0;
 
 
 };

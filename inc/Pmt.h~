@@ -58,8 +58,8 @@ class PMT
     TH1D *h_amplitude; //amplitude of pulse
     TH1D *h_amplitude_low; // amplitude of pulse in a smaller range
     TH1D *h_charge; // charge of pulse
-    TH1D* h_pulsetime; //start time of pulse 
-    TH1D* h_pulsepeaktime; //peak time of pulse
+    TH1D* h_pSTime; //start time of pulse 
+    TH1D* h_pPTime; //peak time of pulse
     TH1I* h_NbOfPulse; // number of pulses in a waveform
 
 };
