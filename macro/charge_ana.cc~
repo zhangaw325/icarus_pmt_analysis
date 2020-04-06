@@ -24,7 +24,7 @@
 
 using namespace std;
 
-void charge_ana( string filename="run207_filenamelist.txt", string hvtablefile="run207_HV.txt" )
+void charge_ana( string filename="run209_filenamelist.txt", string hvtablefile="run209_HV.txt" )
 {
 
   // CHANGE THE FILENAME BELOW IF WANT TO USE ONE OTHER FILE FOR YOUR ANALYSIS
@@ -223,9 +223,11 @@ void charge_ana( string filename="run207_filenamelist.txt", string hvtablefile="
     for( int channel=0; channel<nchannels; channel++ )
     {
       if( pmts[board][channel]->isHVon() ){
-        //pmts[board][channel]->FitChargeSpectrum();
-         double this_hv_value = pmts[board][channel]->getHVvalue();
+         
+         double this_hv_value = pmts[board][channel]->getHV();
          cout<< "HV on for board "<<board<<", ch "<<channel<<": "<<this_hv_value<<endl;
+         // Fit the charge distribution with the ideal response
+         pmts[board][channel]->FitChargeWithIdeal();
       }
       pmts[board][channel]->writeHist(ofile, ampDir, chargeDir);
     }

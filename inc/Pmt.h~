@@ -51,7 +51,10 @@ class PMT
     void initHist();
     void writeHist(TFile* thefile, TDirectory* ampDir, TDirectory* chargeDir);
     bool isIlluminated( int optical_channel );
-    bool isHVon(){ if(m_hv_value!=0) isHVon=true; return is_HVon;}
+    bool isHVon(){ if(m_hv_value!=0) is_HVon=true; return is_HVon;}
+
+    double ChargeIdealResponse() (double* x, double* par);
+    void FitChargeWithIdeal();
 
   private:
 

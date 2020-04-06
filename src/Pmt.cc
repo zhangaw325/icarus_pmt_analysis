@@ -6,6 +6,11 @@
 #include "Utils.h"
 #include "Pmt.h"
 
+#include "IdealChargeFunction.h"
+
+#include "TMath.h"
+#include "TF1.h"
+
 PMT::PMT( )
 { };
 
@@ -129,6 +134,42 @@ void PMT::loadWaveform( Waveform *waveform )
   // m_amplitude_array.push_back(amplitude);
 
 };
+
+//------------------------------------------------------------------------------
+/*
+double PMT::ChargeIdealResponse() (double* x, double* par){
+  double mu = par[0];
+  double q = par[1];
+  double sigma = par[2];
+  double amplitude = par[3];
+  double sum=0;
+  for(int n=1; n<50; n++){
+    sum += (TMath::Power(mu,n)*TMath::Exp(-1.0*mu)/TMath::Factorial(n)*TMath::Exp(-1.0*(x[0]-q*n)*(x[0]-q*n)/(2.0*n*sigma*sigma))/(sigma*TMath::Sqrt(2.0*TMath::Pi()*n)));
+  }
+  return amplitude * sum;
+}
+*/
+
+//------------------------------------------------------------------------------
+void PMT::FitChargeWithIdeal(){
+  
+  IdealChargeFunction idealchargeF_obj;
+
+  TF1* func = new TF1("idealfunc",idealchargeF_obj,0, 100, 4);
+  func->SetParNames("mu","q0","sigma","amp.");
+  func->SetParameters(20,1.0,0.1,h_charge->Integral());
+  func->SetParLimits(0, 0, 50);
+  func->SetParLimits(1, 0, 5);
+  func->SetParLimits(2, 0, 5);
+  func->SetParLimits(3, 0, 10.0*h_charge->Integral());
+  h_charge->Fit("idealfunc","RQ","",0,40);
+  cout<< h_charge->GetName()<<"\t";
+      << getHV() << "\t"
+      << func->GetParameter(0) <<"\t"
+      << func->GetParameter(1) <<"\t"
+      << func->GetParameter(2) <<"\t"
+      << func->GetParameter(3) <<"\n";
+}
 
 //------------------------------------------------------------------------------
 

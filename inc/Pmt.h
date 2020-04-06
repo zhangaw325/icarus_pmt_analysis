@@ -53,6 +53,9 @@ class PMT
     bool isIlluminated( int optical_channel );
     bool isHVon(){ if(m_hv_value!=0) is_HVon=true; return is_HVon;}
 
+    //double ChargeIdealResponse() (double* x, double* par);
+    void FitChargeWithIdeal();
+
   private:
 
     int m_run;
