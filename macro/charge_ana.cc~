@@ -224,8 +224,8 @@ void charge_ana( string filename="run209_filenamelist.txt", string hvtablefile="
     {
       if( pmts[board][channel]->isHVon() ){
          
-         double this_hv_value = pmts[board][channel]->getHV();
-         cout<< "HV on for board "<<board<<", ch "<<channel<<": "<<this_hv_value<<endl;
+         //double this_hv_value = pmts[board][channel]->getHV();
+         //cout<< "HV on for board "<<board<<", ch "<<channel<<": "<<this_hv_value<<endl;
          // Fit the charge distribution with the ideal response
          pmts[board][channel]->FitChargeWithIdeal();
       }

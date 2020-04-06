@@ -162,8 +162,8 @@ void PMT::FitChargeWithIdeal(){
   func->SetParLimits(1, 0, 5);
   func->SetParLimits(2, 0, 5);
   func->SetParLimits(3, 0, 10.0*h_charge->Integral());
-  h_charge->Fit("idealfunc","RQ","",0,40);
-  cout<< h_charge->GetName()<<"\t";
+  h_charge->Fit("idealfunc","RQ","",0,80);
+  cout<< h_charge->GetName()<<"\t"
       << getHV() << "\t"
       << func->GetParameter(0) <<"\t"
       << func->GetParameter(1) <<"\t"
