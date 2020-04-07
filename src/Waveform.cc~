@@ -12,6 +12,16 @@ Waveform::Waveform(){};
 
 //------------------------------------------------------------------------------
 
+Waveform::Waveform(int run, int subrun, int event, int board, int channel)
+  : m_run(run)
+  , m_subrun(subrun)
+  , m_event(event)
+  , m_board(board)
+  , m_channel(channel)
+{ };
+
+//------------------------------------------------------------------------------
+
 Waveform::Waveform(int run, int subrun, int event, int board, int channel, double n_sigma)
   : m_run(run)
   , m_subrun(subrun)
@@ -170,7 +180,7 @@ void Waveform::ComputePulseCharacteristics(){
 
   m_width = (m_end_time-m_start_time);
   m_amplitude = amp;
-  m_integral = charge * 0.02; // the Q converting factor
+  m_integral = charge * 0.122*2.0*0.02; // the Q converting factor
 
   // we count for number of pulses in a separate function
   CountingPulses();

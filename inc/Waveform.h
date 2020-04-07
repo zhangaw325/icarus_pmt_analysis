@@ -30,6 +30,9 @@ class Waveform
       typedef vector<complex<double>> Complex_t;
 
       Waveform();
+      Waveform(int run, int subrun, int event ,int board, int channel);
+      Waveform( int run, int subrun, int event ,int board, int channel,
+                                                     Rawdigits_t raw_waveform );
       Waveform(int run, int subrun, int event ,int board, int channel, double n_sigma);
       Waveform( int run, int subrun, int event ,int board, int channel, double n_sigma,
                                                      Rawdigits_t raw_waveform );

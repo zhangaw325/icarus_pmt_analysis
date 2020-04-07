@@ -39,7 +39,14 @@ PMT::PMT( int run, int pmt_number)
 //------------------------------------------------------------------------------
 
 PMT::~PMT()
-{};
+{
+    delete h_amplitude; //amplitude of pulse
+    delete h_amplitude_low; // amplitude of pulse in a smaller range
+    delete h_charge; // charge of pulse
+    delete h_pulsetime; //start time of pulse 
+    delete h_pulsepeaktime; //peak time of pulse
+    delete h_NbOfPulse; // number of pulses in a waveform
+};
 
 //------------------------------------------------------------------------------
 
@@ -48,32 +55,32 @@ void PMT::initHist()
   char hname[100];
 
   // Amplitude histograms
-  sprintf(hname, "hist_board%d_channel%d_amplitude", m_board,  m_channel);
+  sprintf(hname, "hist_run%d_board%d_channel%d_amplitude", m_run, m_board,  m_channel);
   h_amplitude = new TH1D(hname, hname, 100, 0, 2000);
   h_amplitude->SetXTitle("Amplitude (ADC counts)");
   h_amplitude->SetYTitle("Counts");
 
-  sprintf(hname, "hist_board%d_channel%d_amplitude_low", m_board,  m_channel);
+  sprintf(hname, "hist_run%d_board%d_channel%d_amplitude_low", m_run, m_board,  m_channel);
   h_amplitude_low = new TH1D(hname, hname, 100, 0, 150);
   h_amplitude_low->SetXTitle("Amplitude (ADC counts)");
   h_amplitude_low->SetYTitle("Counts");
 
   // for charge histograms
-  sprintf(hname, "hQ_board%d_ch%d" , m_board, m_channel);
+  sprintf(hname, "hQ_run%d_board%d_ch%d", m_run , m_board, m_channel);
   h_charge = new TH1D(hname, hname, 200,0,100);
   h_charge->SetXTitle("Charge (pC)");
   h_charge->SetYTitle("Counts");
   // for pulse time
-  sprintf(hname, "hPulseTime_board%d_ch%d", m_board, m_channel);
+  sprintf(hname, "hPulseTime_run%d_board%d_ch%d", m_run, m_board, m_channel);
   h_pulsetime = new TH1D(hname, hname, 500,400,500);
   h_pulsetime->SetXTitle("Pulse start time (ns)");
   h_pulsetime->SetYTitle("Counts");
-  sprintf(hname, "hPulsePeakTime_board%d_ch%d", m_board, m_channel);
+  sprintf(hname, "hPulsePeakTime_run%d_board%d_ch%d", m_run, m_board, m_channel);
   h_pulsepeaktime = new TH1D(hname, hname, 500,400,500);
   h_pulsepeaktime->SetXTitle("Pulse start time (ns)");
   h_pulsepeaktime->SetYTitle("Counts");
   // for number of pulse couting
-  sprintf(hname, "hPulseCounting_board%d_ch%d", m_board, m_channel);
+  sprintf(hname, "hPulseCounting_run%d_board%d_ch%d", m_run, m_board, m_channel);
   h_NbOfPulse = new TH1I(hname, hname, 15,0,15);
   h_NbOfPulse->SetXTitle("Number of pulses in the time set window");
   h_NbOfPulse->SetYTitle("Counts");
@@ -157,7 +164,7 @@ void PMT::FitChargeWithIdeal(){
 
   TF1* func = new TF1("idealfunc",idealchargeF_obj,0, 100, 4);
   func->SetParNames("mu","q0","sigma","amp.");
-  func->SetParameters(20,1.0,0.1,h_charge->Integral());
+  func->SetParameters(20,1.0,0.1,h_charge->Integral()/2.0);
   func->SetParLimits(0, 0, 50);
   func->SetParLimits(1, 0, 5);
   func->SetParLimits(2, 0, 5);

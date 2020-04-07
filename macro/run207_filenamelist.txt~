@@ -1,11 +1,4 @@
 ../../process20191121data/run207_01.root
-../../process20191121data/run207_01_evt4_board0_ch0.root
-../../process20191121data/run207_01_out.root
-../../process20191121data/run207_01_out_fitGaus.root
-../../process20191121data/run207_01_out_v1.root
-../../process20191121data/run207_01_out_v2.root
-../../process20191121data/run207_01_out_v3.root
-../../process20191121data/run207_01_out_v3_0.root
 ../../process20191121data/run207_02.root
 ../../process20191121data/run207_03.root
 ../../process20191121data/run207_04.root
@@ -20,4 +13,4 @@
 ../../process20191121data/run207_13.root
 ../../process20191121data/run207_14.root
 ../../process20191121data/run207_15.root
-../../process20191121data/run207_16.root
+../../process20191121data/run207_17.root

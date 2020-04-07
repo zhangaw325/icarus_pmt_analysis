@@ -41,6 +41,8 @@ class PMT
     int getPmtNumber(){ return m_pmt_number; }
     double getHV(){return m_hv_value; }
     void getBoardAndChannel( int pmt_number, int & board, int & channel);
+    
+    TH1D* getChargeHist(){return (TH1D*)h_charge->Clone(); }
 
     void setHV(double value){m_hv_value = value; }
 
@@ -52,8 +54,8 @@ class PMT
     void writeHist(TFile* thefile, TDirectory* ampDir, TDirectory* chargeDir);
     bool isIlluminated( int optical_channel );
     bool isHVon(){ if(m_hv_value!=0) is_HVon=true; return is_HVon;}
-
-    double ChargeIdealResponse() (double* x, double* par);
+    
+    //double ChargeIdealResponse() (double* x, double* par);
     void FitChargeWithIdeal();
 
   private:

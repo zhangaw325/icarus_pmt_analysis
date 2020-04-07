@@ -12,6 +12,26 @@ Waveform::Waveform(){};
 
 //------------------------------------------------------------------------------
 
+Waveform::Waveform(int run, int subrun, int event, int board, int channel)
+  : m_run(run)
+  , m_subrun(subrun)
+  , m_event(event)
+  , m_board(board)
+  , m_channel(channel)
+{ };
+
+//------------------------------------------------------------------------------
+
+Waveform::Waveform( int run, int subrun, int event ,int board, int channel,
+                                                      Rawdigits_t raw_waveform )
+  : Waveform(run, subrun, event, board, channel)
+{
+  this->loadData(raw_waveform);
+};
+
+
+//------------------------------------------------------------------------------
+
 Waveform::Waveform(int run, int subrun, int event, int board, int channel, double n_sigma)
   : m_run(run)
   , m_subrun(subrun)

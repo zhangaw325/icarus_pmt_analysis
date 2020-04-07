@@ -1,6 +1,6 @@
 macro/obj/*.*
 data/*.*
-*.root
-macro/*.root
-macro/*.cxx
+#*.root
+#macro/*.root
+#macro/*.cxx
 macro/*.fcl

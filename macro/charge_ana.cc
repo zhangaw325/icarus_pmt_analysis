@@ -82,10 +82,10 @@ void charge_ana( string filename="run211_filenamelist.txt", string hvtablefile="
 
   // then we will want to look at waveforms characteristics:
   //     charge, amplitude, pulse time, number of pulse (for rate), etc.
-  TH1D *h_pmt_charge[nboards][nchannels]; 
-  TH1D* h_pmt_amplitude[nboards][nchannels];
-  TH1D* h_pmt_pulsetime[nboards][nchannels];
-  TH1D* h_pmt_NbOfPulses[nboards][nchannels];
+  //TH1D *h_pmt_charge[nboards][nchannels]; 
+  //TH1D* h_pmt_amplitude[nboards][nchannels];
+ // TH1D* h_pmt_pulsetime[nboards][nchannels];
+  //TH1D* h_pmt_NbOfPulses[nboards][nchannels];
 
   for(int board=0; board<nboards; board++)
   {
@@ -138,7 +138,7 @@ void charge_ana( string filename="run211_filenamelist.txt", string hvtablefile="
     if(e%1000 ==0)
       cout << "         evt: " << e << endl;
 
-    if(e==1000) break;
+    //if(e==3000) break;
 
     // WE TAKE THE EVENT
     tchain->GetEvent(e);
@@ -159,10 +159,11 @@ void charge_ana( string filename="run211_filenamelist.txt", string hvtablefile="
 
         pmts[board][channel]->loadWaveform(waveform);
 
-        if(!waveform->isValidWaveform()){ continue; }
+        if(!waveform->isValidWaveform()){ delete waveform; continue;  }
 
         // Loop over the entries of the waveform after the baseline subtraction
         // and fill the entries of the histogram h_pmt_rms
+
         for( float entry : waveform->getWaveform() )
         {
           h_pmt_rms[board][channel]->Fill( entry ); // this is distribution of baseline
@@ -170,6 +171,8 @@ void charge_ana( string filename="run211_filenamelist.txt", string hvtablefile="
 
         // this is distribution of mean baseline from waveforms
         h_pmt_baseline[board][channel]->Fill( waveform->getBaselineMean() ); 
+
+        delete waveform;
 
       } // channel
     } // boards
@@ -202,11 +205,11 @@ void charge_ana( string filename="run211_filenamelist.txt", string hvtablefile="
     {
       //Write the histogram to the output TFILE
 
-      g_rms->SetPoint(channel+nchannels*board, channel+nchannels*board,
-                                           h_pmt_rms[board][channel]->GetRMS());
-      baselineDir->cd();
-      h_pmt_rms[board][channel]->Write();
-      h_pmt_baseline[board][channel]->Write();
+      //g_rms->SetPoint(channel+nchannels*board, channel+nchannels*board,
+      //                                     h_pmt_rms[board][channel]->GetRMS());
+      //baselineDir->cd();
+      //h_pmt_rms[board][channel]->Write();
+      //h_pmt_baseline[board][channel]->Write();
     }
   }
 
