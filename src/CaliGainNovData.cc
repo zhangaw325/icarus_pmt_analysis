@@ -1,4 +1,6 @@
 #include "CaliGainNovData.h"
+#include "TCanvas.h"
+#include "TLegend.h"
 
 CaliGainNovData::CaliGainNovData(int board, int channel):m_board(board),m_ch(channel){
       chargehist.resize(0);

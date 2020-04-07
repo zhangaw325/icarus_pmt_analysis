@@ -145,20 +145,6 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
 
     ofile->Close();
 
-    //delete ampDir;
-    //delete chargeDir;
-    //delete ofile;
-    //delete tchain;
-    
-    for( int board=0; board<nboards; board++ )
-    {
-      for( int channel=0; channel<nchannels; channel++ )
-      {
-        //pmts[board][channel] = NULL;
-        //delete pmts[board][channel];
-      }
-    }
-    
     cout << "All done for run "<< run << endl;
 
   }//end run loop
@@ -170,6 +156,15 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
   //TCanvas* cTest = new TCanvas();
   allChargeHist[0][0]->plotHist();
   //cTest->SaveAs("testplot.png");
+
+  // okay, let's do our global fit
+  cout<<"Now we will fit all charge distributions \n"
+      <<" and plot gain vs hv "
+  for(int board=0; board<nboards; board++){
+    for(int ch=0; ch<nchannels; ch++){
+      //if()
+    }
+  }
 
   cout<<"Success, exiting ..."<<endl;
   exit(0);

@@ -15,7 +15,7 @@ void CaliGainNovData::loadOneHist(TH1D* hist, double hv){
     voltages.push_back(hv);
 }
 
-void plotHist(){
+void CaliGainNovData::plotHist(){
       cout<<chargehist.size()<<endl;
       
       char text[100]; 

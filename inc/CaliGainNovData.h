@@ -1,5 +1,4 @@
-#include "Pmt.h"
-#include "TH1F.h"
+#include "TH1D.h"
 
 class CaliGainNovData{
 
