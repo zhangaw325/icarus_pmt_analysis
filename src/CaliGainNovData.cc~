@@ -1,12 +1,20 @@
 #include "CaliGainNovData.h"
+#include "Utils.h"
 
-CaliGainNovData::CaliGainNovData(int board, int channel):m_board(board),m_ch(channel){
+#include "TCanvas.h"
+#include "TLegend.h"
+#include "TStyle.h"
+
+CaliGainNovData::CaliGainNovData(){;}
+
+CaliGainNovData::CaliGainNovData(int board, int channel):m_board(board),m_ch(channel)
+{
       chargehist.resize(0);
       voltages.resize(0);
 }
 
 CaliGainNovData::~CaliGainNovData(){
-  for(int i=0; i<chargehist.size(); i++)
+  for(int i=0; i<(int)chargehist.size(); i++)
     delete chargehist[i]; 
 }
 
@@ -21,7 +29,7 @@ void CaliGainNovData::plotHist(){
       char text[100]; 
       TCanvas* cTest = new TCanvas();
       gStyle->SetOptStat(0);
-      for(int i=0; i<chargehist.size(); i++){
+      for(int i=0; i<(int)chargehist.size(); i++){
         if(! chargehist[i]) continue;
         if(i==0) chargehist[i]->Draw();
         else chargehist[i]->Draw("same");
@@ -30,7 +38,7 @@ void CaliGainNovData::plotHist(){
       }
       TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
       leg->SetHeader("HV values");
-      for(int i=0; i<chargehist.size(); i++){
+      for(int i=0; i<(int)chargehist.size(); i++){
         sprintf(text, "%.1f", voltages[i]);
         leg->AddEntry(chargehist[i],text,"lp");
       }

@@ -1,9 +1,21 @@
+#ifndef  __CaliGainNovData_H
+#define __CaliGainNovData_H
+
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "TH1D.h"
 
-class CaliGainNovData{
+using namespace std;
+
+class CaliGainNovData
+{
 
   public:
 
+    CaliGainNovData();
     CaliGainNovData(int board, int channel);
 
     ~CaliGainNovData();
@@ -18,3 +30,5 @@ class CaliGainNovData{
     int m_board;
     int m_ch;
 };
+
+#endif

@@ -41,6 +41,7 @@ void loadLib(){
   gROOT->LoadMacro((currentdir+"/../src/Run.cc+").c_str());
   gROOT->LoadMacro((currentdir+"/../src/Waveform.cc+").c_str());
   gROOT->LoadMacro((currentdir+"/../src/Pmt.cc+").c_str());
+  gROOT->LoadMacro((currentdir+"/../src/CaliGainNovData.cc+").c_str());
 
   #define __INITIALIZED__
 

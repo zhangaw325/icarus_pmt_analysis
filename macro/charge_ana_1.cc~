@@ -162,7 +162,7 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
       <<" and plot gain vs hv "
   for(int board=0; board<nboards; board++){
     for(int ch=0; ch<nchannels; ch++){
-      if()
+      //if()
     }
   }
 

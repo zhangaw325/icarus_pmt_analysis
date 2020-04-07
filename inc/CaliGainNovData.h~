@@ -1,9 +1,18 @@
-#include "TH1F.h"
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
+#include <stdio.h>
 
-class CaliGainNovData{
+#include "TH1D.h"
+
+using namespace std;
+
+class CaliGainNovData
+{
 
   public:
 
+    CaliGainNovData();
     CaliGainNovData(int board, int channel);
 
     ~CaliGainNovData();
