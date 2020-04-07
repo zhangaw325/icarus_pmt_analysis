@@ -42,7 +42,7 @@ class PMT
     double getHV(){return m_hv_value; }
     void getBoardAndChannel( int pmt_number, int & board, int & channel);
     
-    TH1D* getChargeHist(){return (TH1D*)h_charge->Clone(); }
+    TH1D* getChargeHist(){return h_charge; /*(TH1D*)h_charge->Clone();*/ }
 
     void setHV(double value){m_hv_value = value; }
 

@@ -168,7 +168,7 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
 
   // test
   //TCanvas* cTest = new TCanvas();
-  allChargeHist[0][0]->plotHist();
+  //allChargeHist[0][0]->plotHist();
   //cTest->SaveAs("testplot.png");
 
   cout<<"Success, exiting ..."<<endl;
