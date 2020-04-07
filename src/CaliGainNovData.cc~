@@ -1,16 +1,21 @@
-#include "Pmt.h"
-#include "TH1F.h"
+#include "CaliGainNovData.h"
 
-class CaliGainNovData{
+CaliGainNovData::CaliGainNovData(int board, int channel):m_board(board),m_ch(channel){
+      chargehist.resize(0);
+      voltages.resize(0);
+}
 
-  public:
+CaliGainNovData::~CaliGainNovData(){
+  for(int i=0; i<chargehist.size(); i++)
+    delete chargehist[i]; 
+}
 
-    CaliGainNovData(int board, int channel);
+void CaliGainNovData::loadOneHist(TH1D* hist, double hv){
+    chargehist.push_back(hist);
+    voltages.push_back(hv);
+}
 
-    ~CaliGainNovData();
-
-    void loadOneHist(TH1D* hist, double hv);
-    void plotHist(){
+void plotHist(){
       cout<<chargehist.size()<<endl;
       
       char text[100]; 
@@ -35,12 +40,4 @@ class CaliGainNovData{
       cTest->SaveAs(text);
       cTest->Close();
       
-    }
-
-  private:
-
-    vector<TH1D*> chargehist;
-    vector<double> voltages;
-    int m_board;
-    int m_ch;
-};
+}

@@ -40,12 +40,12 @@ PMT::PMT( int run, int pmt_number)
 
 PMT::~PMT()
 {
-    delete h_amplitude; //amplitude of pulse
-    delete h_amplitude_low; // amplitude of pulse in a smaller range
+    //delete h_amplitude; //amplitude of pulse
+    //delete h_amplitude_low; // amplitude of pulse in a smaller range
     //delete h_charge; // charge of pulse
-    delete h_pulsetime; //start time of pulse 
-    delete h_pulsepeaktime; //peak time of pulse
-    delete h_NbOfPulse; // number of pulses in a waveform
+    //delete h_pulsetime; //start time of pulse 
+    //delete h_pulsepeaktime; //peak time of pulse
+    //delete h_NbOfPulse; // number of pulses in a waveform
 };
 
 //------------------------------------------------------------------------------
