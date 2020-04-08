@@ -251,15 +251,18 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
       leg->AddEntry(chargehist[i],gname,"lp");
     }
     leg->Draw(); 
-    TPaveText* pt = new TPaveText(0.6,0.3,0.9,0.7, "brNDC");   
-    pt->AddText("Fit parameters:");
+    TPaveText* pt = new TPaveText(0.55,0.15,0.9,0.7, "brNDC");   
+    pt->AddText("Fit result:");
+    sprintf(gname,"chi^{2}/ndf: %.1f/%d", amin, n_pars);
+    pt->AddText(gname);
     sprintf(gname,"npe: %.2f #pm %.2f", outpar[0], errors[0]);
     pt->AddText(gname);
+    pt->AddText("# | q | w | a");
     for(int i=0; i<(int)chargehist.size();i++){
-      sprintf(gname, "q%d_%.2f/w%d_%.2f/a%d_%.1f",
-                 i+1, outpar[i*chargehist.size()+1], 
-                 i+1, outpar[i*chargehist.size()+2],
-                 i+1, outpar[i*chargehist.size()+3]);
+      sprintf(gname, "%d | %.2f #pm %.2f | %.2f #pm %.2f | %.2f #pm %.2f", i+1,
+                 outpar[i*chargehist.size()+1], errors[i*chargehist.size()+1],
+                 outpar[i*chargehist.size()+2], errors[i*chargehist.size()+2],
+                 outpar[i*chargehist.size()+3], errors[i*chargehist.size()+3]);
       pt->AddText(gname);
 
     }
@@ -267,7 +270,7 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
     pt->SetBorderSize(1);
     pt->SetFillColor(0);
     pt->SetTextFont(42);
-    //pt->SetTextAlign(1);
+    pt->SetTextAlign(12);
     cCharge->Modified(); cCharge->Update();
     cCharge->Write();
     cCharge->Close();

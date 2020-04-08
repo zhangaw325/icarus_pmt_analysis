@@ -82,7 +82,7 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
         cout << "         evt: " << e << endl;
         subrun++;
       }
-      if(e==2500) break;
+      //if(e==2500) break;
 
       // WE TAKE THE EVENT
       tchain->GetEvent(e);
@@ -168,7 +168,9 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
   // okay, let's do our global fit
   cout<<"Now we will fit all charge distributions \n"
       <<" and plot gain vs hv " <<endl;
-  TFile* gainfile = new TFile("gain_curves_result.root","recreate");
+  char name[100];
+  sprintf(name, "gain_curves_result_run%d.root",run);
+  TFile* gainfile = new TFile(name,"recreate");
   for(int board=0; board<nboards; board++){
     for(int ch=0; ch<nchannels; ch++){
       if( allChargeHist[board][ch]->getNbOfDataPoints() == 0 ) continue;

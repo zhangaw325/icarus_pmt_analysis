@@ -16,6 +16,7 @@
 void charge_ana_1(string metadatafile="metadata1.txt"){
 
   // turn off canvas display during running.
+  // also stop showing statbox on histograms
   gROOT->SetBatch(kTRUE);
   gStyle->SetOptStat(0);
 
@@ -81,7 +82,7 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
         cout << "         evt: " << e << endl;
         subrun++;
       }
-      if(e==2500) break;
+      //if(e==2500) break;
 
       // WE TAKE THE EVENT
       tchain->GetEvent(e);

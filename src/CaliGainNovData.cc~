@@ -118,7 +118,7 @@ double CaliGainNovData::idealResponse(double npe,
       //fstream fouttest("testout.txt",ios::out|ios::app);
       //if(i==0) {fouttest<<j<<x<<"\t"<<y<<endl;}
       double prediction = 0;
-      for(int k=1;k<75;k++){
+      for(int k=1;k<100;k++){
           prediction += (TMath::Power(npe,k)*TMath::Exp(-1.0*npe)/TMath::Factorial(k)
             *TMath::Exp(-1.0*(x-q[i]*k)*(x-q[i]*k)
               /(2.0*k*sigma[i]*sigma[i]))/(sigma[i]*TMath::Sqrt(2.0*TMath::Pi()*k)));
@@ -179,6 +179,7 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
                              minVal[i], maxVal[i]);
     }
     // do the fit
+    minimizer->Command("SET PRINT -1");//SetPrintLevel(-1);
     int fitstatus= minimizer->Migrad();
     // get parameters
     double outpar[n_pars], errors[n_pars];
@@ -228,7 +229,7 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
     sprintf(gname,"cChargeDis_bd%d_ch%d",m_board,m_ch);
     cCharge->SetName(gname);
     IdealChargeFunction idealchargePlot_obj; // hard coded 
-    TF1* fun[3];
+    TF1* func[3];
     for(int i=0; i<(int)chargehist.size(); i++){
       if(i==0) chargehist[i]->Draw();
       else chargehist[i]->Draw("same");
@@ -240,7 +241,7 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
                           outpar[i*chargehist.size()+1],
                           outpar[i*chargehist.size()+2],
                           outpar[i*chargehist.size()+3]);
-      func[i]->SetLineColor(1); func->SetLineStyle(2);
+      func[i]->SetLineColor(1); func[i]->SetLineStyle(2);
       func[i]->Draw("same");
     }
     TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
@@ -250,18 +251,26 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
       leg->AddEntry(chargehist[i],gname,"lp");
     }
     leg->Draw(); 
-    TPaveText* pt = new TPaveText(0.7,0.4,0.9,0.7);   
-    pt->AddText("Fit parameters:");
-    sprintf(gname,"npe: %.2f (%.2f)", par[0], error[0]);
+    TPaveText* pt = new TPaveText(0.55,0.15,0.9,0.7, "brNDC");   
+    pt->AddText("Fit result:");
+    sprintf(gname,"chi^{2}/ndf: %.1f/%.0f", amin, n_pars);
     pt->AddText(gname);
+    sprintf(gname,"npe: %.2f #pm %.2f", outpar[0], errors[0]);
+    pt->AddText(gname);
+    pt->AddText("# | q | w | a");
     for(int i=0; i<(int)chargehist.size();i++){
-      sprintf(gname, "q%d_%.2f/w%d_%.2f/a%d_%.1f",
-                 i+1, outpar[i*chargehist.size()+1], 
-                 i+1, outpar[i*chargehist.size()+2],
-                 i+1, outpar[i*chargehist.size()+3]);
+      sprintf(gname, "%d | %.2f #pm %.2f | %.2f #pm %.2f | %.2f #pm %.2f", i+1,
+                 outpar[i*chargehist.size()+1], errors[i*chargehist.size()+1],
+                 outpar[i*chargehist.size()+2], errors[i*chargehist.size()+2],
+                 outpar[i*chargehist.size()+3], errors[i*chargehist.size()+3]);
       pt->AddText(gname);
 
     }
+    pt->Draw();
+    pt->SetBorderSize(1);
+    pt->SetFillColor(0);
+    pt->SetTextFont(42);
+    pt->SetTextAlign(12);
     cCharge->Modified(); cCharge->Update();
     cCharge->Write();
     cCharge->Close();
