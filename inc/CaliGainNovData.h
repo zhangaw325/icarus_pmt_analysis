@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "TH1D.h"
+#include "TFile.h"
 
 #include "TFitter.h"
 
@@ -29,7 +30,7 @@ class CaliGainNovData
     int getNbOfDataPoints(){return (int)voltages.size();}
     vector<TH1D*> getHistograms(){return chargehist; };
 
-    void fitGainCurve();
+    void fitGainCurve(TFile* ofile);
 
     //void myfcn(int &npar, double * deriv, double &f, double * par, int iflag);
     static void myfcn(int &npar, double * deriv, double &f, double * par, int iflag);

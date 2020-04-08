@@ -2,6 +2,7 @@
 #include "Waveform.h"
 #include "Pmt.h"
 #include "CaliGainNovData.h"
+#include "IdealChargeFunction.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -9,9 +10,15 @@
 #include "TH1D.h"
 #include "TDirectory.h"
 #include "TGraph.h"
+#include "TROOT.h"
 
 
 void charge_ana_1(string metadatafile="metadata1.txt"){
+
+  // turn off canvas display during running.
+  // also stop showing statbox on histograms
+  gROOT->SetBatch(kTRUE);
+  gStyle->SetOptStat(0);
 
   string path = "../../process20191121data/";
 
@@ -134,7 +141,8 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
            //double this_hv_value = pmts[board][channel]->getHV();
            //cout<< "HV on for board "<<board<<", ch "<<channel<<": "<<this_hv_value<<endl;
            // Fit the charge distribution with the ideal response
-           pmts[board][channel]->FitChargeWithIdeal();
+           // I don't do it now because I will do global fit
+           // pmts[board][channel]->FitChargeWithIdeal();
 
            allChargeHist[board][channel]->loadOneHist( pmts[board][channel]->getChargeHist(),  hvtable[channel] );
 
@@ -160,14 +168,16 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
   // okay, let's do our global fit
   cout<<"Now we will fit all charge distributions \n"
       <<" and plot gain vs hv " <<endl;
+  TFile* gainfile = new TFile("gain_curves_result.root","recreate");
   for(int board=0; board<nboards; board++){
     for(int ch=0; ch<nchannels; ch++){
       if( allChargeHist[board][ch]->getNbOfDataPoints() == 0 ) continue;
       cout <<" .. fitting board "<<board<<", ch "<<ch<<endl;
 
-      allChargeHist[board][ch]->fitGainCurve( );
+      allChargeHist[board][ch]->fitGainCurve(gainfile );
     }
   }
+  gainfile->Close();
 
   cout<<"Success, exiting ..."<<endl;
   exit(0);

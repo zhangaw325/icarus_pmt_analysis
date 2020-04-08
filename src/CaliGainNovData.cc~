@@ -1,4 +1,5 @@
 #include "CaliGainNovData.h"
+#include "IdealChargeFunction.h"
 //#include "Utils.h"
 #include <iostream>
 #include <fstream>
@@ -10,23 +11,22 @@
 #include "TLegend.h"
 #include "TStyle.h"
 #include "TMath.h"
-
+#include "TGraphErrors.h"
+#include "TF1.h"
 #include "TMinuit.h"
 #include "TH1D.h"
+#include "TPaveText.h"
 
 //using namespace std;
 
-double global_hist_y[3][200];
-double global_hist_x[3][200];
-//global_hist.resize(0);
-/*
-for(int i=0; i<3; i++){
-  for(int j=0;j<200;j++){
-    global_hist_y[i][j]=0;
-    global_hist_x[i][j]=0;
-  }
-}
-*/
+//global variables for hosting charge distribution
+struct ds_global {
+  vector<TH1D*> ghist;
+  vector<double> gv;
+} ds;
+
+//ds.ghist.resize(0);
+//ds.gv.resize(0);
 
 static CaliGainNovData* fitobj;
 
@@ -43,8 +43,8 @@ CaliGainNovData::CaliGainNovData(int board, int channel):m_board(board),m_ch(cha
 }
 
 CaliGainNovData::~CaliGainNovData(){
-  //for(int i=0; i<(int)chargehist.size(); i++)
-  //  delete chargehist[i]; 
+  for(int i=0; i<(int)chargehist.size(); i++)
+    delete chargehist[i]; 
 }
 
 void CaliGainNovData::Initialize(vector<TH1D*>  hist, vector<double>  hv){
@@ -88,13 +88,16 @@ void CaliGainNovData::plotHist(){
       
 }
 
+// --------------------------------------------------------------------
+// this is the real function that is used at this moment
+// for computing the chi2, using the ideal response of a PMT
 double CaliGainNovData::idealResponse(double npe,
                                       double Q1, double w1, double a1,            
                                       double Q2, double w2, double a2,
                                       double Q3, double w3, double a3)
 {
   //cout<<"idealResponse is called ..."<<endl;
-  const int npoints = 3;//this->getNbOfDataPoints();
+  const int npoints = (int) ds.ghist.size(); //3;//this->getNbOfDataPoints();
   //cout<<"check "<<global_hist.size()<<endl;
   if(npoints==0) {cout<<"fitting no data in CaliGainNovData:myfcn"<<endl; exit(0);}
 
@@ -107,13 +110,13 @@ double CaliGainNovData::idealResponse(double npe,
   // compute the chi2
   double chi2 = 0;
   for(int i=0; i<npoints; i++){
-    int nbins = 200;//global_hist[i]->GetNbinsX();
+    int nbins = (int)ds.ghist[i]->GetNbinsX();//200;
 
-    for(int j=1; j<nbins-1; j++){
-      double x = global_hist_x[i][j];//->GetBinCenter(j+1);
-      double y = global_hist_y[i][j];//->GetBinContent(j+1);
-      fstream fouttest("testout.txt",ios::out|ios::app);
-      if(i==0) {fouttest<<j<<x<<"\t"<<y<<endl;}
+    for(int j=0; j<nbins-1; j++){
+      double x = ds.ghist[i]->GetBinCenter(j+1);
+      double y = ds.ghist[i]->GetBinContent(j+1);
+      //fstream fouttest("testout.txt",ios::out|ios::app);
+      //if(i==0) {fouttest<<j<<x<<"\t"<<y<<endl;}
       double prediction = 0;
       for(int k=1;k<75;k++){
           prediction += (TMath::Power(npe,k)*TMath::Exp(-1.0*npe)/TMath::Factorial(k)
@@ -130,70 +133,139 @@ double CaliGainNovData::idealResponse(double npe,
 
 }
 
-//I want to make a global FNC function
+// --------------------------------------------------------------------------------
+// this is the function to be called by the fitter
+// inside it will call another function to do real calculations
 void CaliGainNovData::myfcn(int &npar, double * deriv, double &f, double * par, int iflag){
-  //cout<<"myfcn is called"<<endl;
-  //for(int i=0; i<10; i++){
-  //   cout<<"par"<<i+1<<"\t"<<par[i]<<endl;
-  //}
   f = fitobj->idealResponse(par[0], par[1], par[2], par[3], par[4], par[5], par[6], par[7], par[8], par[9]);
 }
 
-void CaliGainNovData::fitGainCurve(){
+// -------------------------------------------------------------------------------
+// the hook for starting the global fit to charge distributions
+
+void CaliGainNovData::fitGainCurve(TFile* ofile){
     if(chargehist.size()==0){ cout<<"fitGainCurve will not work if no data points"<<endl; exit(0); }
 
-    cout<<"fitGainCurve called " << voltages[0]<<"\t"
-                                <<voltages[1]<<"\t"<<voltages[2]<<endl;
-
-    //cout<<"test output "<<chargehist[0]->Integral()<<"\t"
-    //                    <<chargehist[1]->Integral()<<"\t"
-    //                    <<chargehist[2]->Integral()<<"\n";
-
-    //global_hist.resize(0);
-    //for(int i=0; i< (int)chargehist.size(); i++){
-    //    global_hist.push_back(chargehist[i]);
-    //}
-
-    for(int i=0; i<3; i++){
-      for(int j=0;j<200;j++){
-        global_hist_y[i][j]=chargehist[i]->GetBinContent(j+1);
-        global_hist_x[i][j]=chargehist[i]->GetBinCenter(j+1);
-      }
+    // set the global variables to be used by the fitter
+    for(int i=0; i< (int)chargehist.size(); i++){
+        ds.ghist.push_back(chargehist[i]);
+        ds.gv.push_back(voltages[i]);
     }
 
-    //fitobj->Initialize(chargehist, voltages);
-
-    //int n = getNbOfDataPoints() ;
+    // define number of parameters and their initial values
+    int n = getNbOfDataPoints() ;
     const int n_pars = 10;//1 + 3*n ;
-
-    double vstart[10]={20, 
+    double vstart[n_pars]={20, 
                        1.0, 0.5, chargehist[0]->Integral()/2.0,
                        1.0, 0.5, chargehist[1]->Integral()/2.0,
                        1.0, 0.5, chargehist[2]->Integral()/2.0} ;
-    double step[10]={0.5, 0.1, 0.1, 20, 0.1, 0.1, 20, 0.1, 0.1, 20};
-    double minVal[10]={0, 0.01, 0.001, 0, 0.01, 0.001, 0, 0.01, 0.001, 0};
-    double maxVal[10]={50, 10, 10,chargehist[0]->Integral()*2.0, 
+    double step[n_pars]={0.5, 0.1, 0.1, 20, 0.1, 0.1, 20, 0.1, 0.1, 20};
+    double minVal[n_pars]={0, 0.01, 0.001, 0, 0.01, 0.001, 0, 0.01, 0.001, 0};
+    double maxVal[n_pars]={50, 10, 10,chargehist[0]->Integral()*2.0, 
                           10, 10,chargehist[1]->Integral()*2.0, 
                           10, 10,chargehist[2]->Integral()*2.0};
-    string parName[10]={"npe",
+    string parName[n_pars]={"npe",
                             "q1", "w1", "a1",
                             "q2", "w2", "a2",
                             "q3", "w3", "a3"
                            };
-
-    //TFitter* minimizer = new TFitter(10);
+    // set the fitter: use TMinuit
     TMinuit* minimizer = new TMinuit(n_pars);
+    // the fit function is set
     minimizer->SetFCN(CaliGainNovData::myfcn);
+    //  
     for(int i=0; i<n_pars; i++){
       minimizer->DefineParameter(i, parName[i].c_str(), vstart[i], step[i], 
                              minVal[i], maxVal[i]);
     }
-    //minimizer->ExecuteCommand("SIMPLEX",0,0);
-    //minimizer->ExecuteCommand("MIGRAD", vstart ,n_pars);
-    minimizer->Migrad();
+    // do the fit
+    int fitstatus= minimizer->Migrad();
+    // get parameters
+    double outpar[n_pars], errors[n_pars];
+    for(int i=0; i<n_pars; i++){
+      minimizer->GetParameter(i, outpar[i], errors[i]);
+    }
+    cout<<"check fit status "<<fitstatus<<endl;
+    if(fitstatus==4){
+      for(int i=0; i<n_pars; i++){
+        minimizer->DefineParameter(i, parName[i].c_str(), outpar[i], step[i]/2.0, 
+                               minVal[i], maxVal[i]);
+      }
+      fitstatus = minimizer->Migrad();
+      cout<<"status of the second fit "<<fitstatus<<endl;
+      for(int i=0; i<n_pars; i++){
+        minimizer->GetParameter(i, outpar[i], errors[i]);
+      }
+    }
 
+    // here we get the result from the fit
     double amin,edm,errdef;
     int nvpar,nparx,icstat;
     minimizer->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
     cout<<amin<<"\t"<<edm<<"\t"<<errdef<<"\t"<<nvpar<<"\t"<<nparx<<"\t"<<icstat<<endl;
+
+    // plot gain curves and save them in the root file
+    char gname[100]; 
+    TCanvas* cGain = new TCanvas();
+    sprintf(gname, "c_gain_bd%d_ch%d",m_board,m_ch);
+    cGain->SetName(gname);
+    TGraphErrors* gGain = new TGraphErrors();
+    sprintf(gname, "gain_bd%d_ch%d",m_board,m_ch);
+    gGain->SetName(gname);    gGain->SetTitle(gname);
+    gGain->GetXaxis()->SetTitle("HV (V)");
+    gGain->GetYaxis()->SetTitle("Gain (10^{7})");
+    for(int i=0; i< (int)voltages.size(); i++){
+        gGain->SetPoint(i, voltages[i], outpar[voltages.size()*i+1]/1.6);
+        gGain->SetPointError(i, 0, errors[voltages.size()*i+1]/1.6);
+    }
+    gGain->Draw("ALP");
+    gGain->SetMarkerStyle(8);
+    ofile->cd();
+    gGain->Write();
+    cGain->Close();
+    // plot charge distributions and the fit curves
+    TCanvas* cCharge = new TCanvas();
+    sprintf(gname,"cChargeDis_bd%d_ch%d",m_board,m_ch);
+    cCharge->SetName(gname);
+    IdealChargeFunction idealchargePlot_obj; // hard coded 
+    TF1* fun[3];
+    for(int i=0; i<(int)chargehist.size(); i++){
+      if(i==0) chargehist[i]->Draw();
+      else chargehist[i]->Draw("same");
+      chargehist[i]->SetLineColor(i+1);
+      sprintf(gname,"idealfunc%d",i);
+      func[i] = new TF1(gname,idealchargePlot_obj,0, 100, 4);
+      func[i]->SetParNames("mu","q0","sigma","amp.");
+      func[i]->SetParameters(outpar[0],
+                          outpar[i*chargehist.size()+1],
+                          outpar[i*chargehist.size()+2],
+                          outpar[i*chargehist.size()+3]);
+      func[i]->SetLineColor(1); func->SetLineStyle(2);
+      func[i]->Draw("same");
+    }
+    TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
+    leg->SetHeader("HV values");
+    for(int i=0; i<(int)chargehist.size(); i++){
+      sprintf(gname, "%.1f", voltages[i]);
+      leg->AddEntry(chargehist[i],gname,"lp");
+    }
+    leg->Draw(); 
+    TPaveText* pt = new TPaveText(0.7,0.4,0.9,0.7);   
+    pt->AddText("Fit parameters:");
+    sprintf(gname,"npe: %.2f (%.2f)", par[0], error[0]);
+    pt->AddText(gname);
+    for(int i=0; i<(int)chargehist.size();i++){
+      sprintf(gname, "q%d_%.2f/w%d_%.2f/a%d_%.1f",
+                 i+1, outpar[i*chargehist.size()+1], 
+                 i+1, outpar[i*chargehist.size()+2],
+                 i+1, outpar[i*chargehist.size()+3]);
+      pt->AddText(gname);
+
+    }
+    cCharge->Modified(); cCharge->Update();
+    cCharge->Write();
+    cCharge->Close();
+    // in the end of the fit function, need to reset the global variables
+    ds.ghist.resize(0);
+    ds.gv.resize(0);
 }

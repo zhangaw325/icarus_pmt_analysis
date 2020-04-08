@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "TH1D.h"
+#include "TFile.h"
 
 #include "TFitter.h"
 
@@ -21,7 +22,7 @@ class CaliGainNovData
     CaliGainNovData(int board, int channel);
 
     ~CaliGainNovData();
-    void Initialize(vector<TH1D*> & hist, vector<double> & v);
+    void Initialize(vector<TH1D*>  hist, vector<double> v);
 
     void loadOneHist(TH1D* hist, double hv);
     void plotHist();

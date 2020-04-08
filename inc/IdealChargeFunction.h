@@ -1,3 +1,6 @@
+#ifndef  __IdealChargeFunction_H
+#define __IdealChargeFunction_H
+
 #include "TMath.h"
 
 class IdealChargeFunction {
@@ -10,7 +13,7 @@ class IdealChargeFunction {
       double sigma = par[2];
       double amplitude = par[3];
       double sum=0;
-      for(int n=1; n<50; n++){
+      for(int n=1; n<100; n++){
         sum += (TMath::Power(mu,n)*TMath::Exp(-1.0*mu)/TMath::Factorial(n)
                 *TMath::Exp(-1.0*(x[0]-q*n)*(x[0]-q*n)
                   /(2.0*n*sigma*sigma))/(sigma*TMath::Sqrt(2.0*TMath::Pi()*n)));
@@ -18,3 +21,5 @@ class IdealChargeFunction {
       return amplitude * sum;
     }
 };
+
+#endif
