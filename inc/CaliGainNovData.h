@@ -8,6 +8,8 @@
 
 #include "TH1D.h"
 
+#include "TFitter.h"
+
 using namespace std;
 
 class CaliGainNovData
@@ -19,9 +21,19 @@ class CaliGainNovData
     CaliGainNovData(int board, int channel);
 
     ~CaliGainNovData();
+    void Initialize(vector<TH1D*>  hist, vector<double> v);
 
     void loadOneHist(TH1D* hist, double hv);
     void plotHist();
+
+    int getNbOfDataPoints(){return (int)voltages.size();}
+    vector<TH1D*> getHistograms(){return chargehist; };
+
+    void fitGainCurve();
+
+    //void myfcn(int &npar, double * deriv, double &f, double * par, int iflag);
+    static void myfcn(int &npar, double * deriv, double &f, double * par, int iflag);
+    double idealResponse(double mu, double Q1, double w1, double a1, double Q2, double w2, double a2, double Q3, double w3, double a3);
 
   private:
 

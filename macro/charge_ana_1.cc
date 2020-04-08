@@ -154,7 +154,7 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
 
   // test
   //TCanvas* cTest = new TCanvas();
-  allChargeHist[0][0]->plotHist();
+  //allChargeHist[0][0]->plotHist();
   //cTest->SaveAs("testplot.png");
 
   // okay, let's do our global fit
@@ -162,7 +162,10 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
       <<" and plot gain vs hv " <<endl;
   for(int board=0; board<nboards; board++){
     for(int ch=0; ch<nchannels; ch++){
-      //if()
+      if( allChargeHist[board][ch]->getNbOfDataPoints() == 0 ) continue;
+      cout <<" .. fitting board "<<board<<", ch "<<ch<<endl;
+
+      allChargeHist[board][ch]->fitGainCurve( );
     }
   }
 
