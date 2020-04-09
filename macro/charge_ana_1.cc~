@@ -13,7 +13,7 @@
 #include "TROOT.h"
 
 
-void charge_ana_1(string metadatafile="metadata1.txt"){
+void charge_ana_1(string metadatafile="metadata2.txt"){
 
   // turn off canvas display during running.
   // also stop showing statbox on histograms
@@ -142,7 +142,7 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
            //cout<< "HV on for board "<<board<<", ch "<<channel<<": "<<this_hv_value<<endl;
            // Fit the charge distribution with the ideal response
            // I don't do it now because I will do global fit
-           // pmts[board][channel]->FitChargeWithIdeal();
+            pmts[board][channel]->FitChargeWithIdeal();
 
            allChargeHist[board][channel]->loadOneHist( pmts[board][channel]->getChargeHist(),  hvtable[channel] );
 
@@ -168,7 +168,9 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
   // okay, let's do our global fit
   cout<<"Now we will fit all charge distributions \n"
       <<" and plot gain vs hv " <<endl;
-  TFile* gainfile = new TFile("gain_curves_result.root","recreate");
+  char name[100];
+  sprintf(name, "gain_curves_result_run%d.root",run);
+  TFile* gainfile = new TFile(name,"recreate");
   for(int board=0; board<nboards; board++){
     for(int ch=0; ch<nchannels; ch++){
       if( allChargeHist[board][ch]->getNbOfDataPoints() == 0 ) continue;

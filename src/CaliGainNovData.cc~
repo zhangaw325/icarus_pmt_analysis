@@ -221,6 +221,17 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
     }
     gGain->Draw("ALP");
     gGain->SetMarkerStyle(8);
+    // fit the gain curve 
+    TF1* fGain = new TF1("fGain","[0]*TMath::Power(x,[1])",1,2000);
+    fGain->SetParNames("a","b");
+    fGain->SetParameters(1e-24,7.5);
+    gGain->Fit("fGain","QR","",voltages[0]-10, voltages[2]+10);
+    for(int i=0; i<5;i++){
+      double a=fGain->GetParameter(0);
+      double b=fGain->GetParameter(1);
+      fGain->SetParameters(a,b);
+      g->Fit("fGain","QR","",1150, 1270);
+    }
     ofile->cd();
     gGain->Write();
     cGain->Close();
@@ -244,22 +255,21 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
       func[i]->SetLineColor(1); func[i]->SetLineStyle(2);
       func[i]->Draw("same");
     }
-    TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
+    TLegend* leg = new TLegend(0.7,0.3,0.9,0.5);
     leg->SetHeader("HV values");
     for(int i=0; i<(int)chargehist.size(); i++){
       sprintf(gname, "%.1f", voltages[i]);
       leg->AddEntry(chargehist[i],gname,"lp");
     }
     leg->Draw(); 
-    TPaveText* pt = new TPaveText(0.55,0.15,0.9,0.7, "brNDC");   
-    pt->AddText("Fit result:");
-    sprintf(gname,"chi^{2}/ndf: %.1f/%.0f", amin, n_pars);
+    TPaveText* pt = new TPaveText(0.5,0.5,0.9,0.9, "brNDC");   
+    sprintf(gname, "Fit status: %d, #chi^{2}/ndf: %.1f/%d", fitstatus, amin, n_pars);
     pt->AddText(gname);
     sprintf(gname,"npe: %.2f #pm %.2f", outpar[0], errors[0]);
     pt->AddText(gname);
-    pt->AddText("# | q | w | a");
+    pt->AddText("# , q , w , a:");
     for(int i=0; i<(int)chargehist.size();i++){
-      sprintf(gname, "%d | %.2f #pm %.2f | %.2f #pm %.2f | %.2f #pm %.2f", i+1,
+      sprintf(gname, "%d, %.2f #pm %.2f, %.2f #pm %.2f, %.2f #pm %.2f", i+1,
                  outpar[i*chargehist.size()+1], errors[i*chargehist.size()+1],
                  outpar[i*chargehist.size()+2], errors[i*chargehist.size()+2],
                  outpar[i*chargehist.size()+3], errors[i*chargehist.size()+3]);

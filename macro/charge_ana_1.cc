@@ -142,7 +142,7 @@ void charge_ana_1(string metadatafile="metadata1.txt"){
            //cout<< "HV on for board "<<board<<", ch "<<channel<<": "<<this_hv_value<<endl;
            // Fit the charge distribution with the ideal response
            // I don't do it now because I will do global fit
-           // pmts[board][channel]->FitChargeWithIdeal();
+            pmts[board][channel]->FitChargeWithIdeal();
 
            allChargeHist[board][channel]->loadOneHist( pmts[board][channel]->getChargeHist(),  hvtable[channel] );
 

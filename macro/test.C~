@@ -1,0 +1,15 @@
+{
+  TFile* f = new TFile("gain_curves_result_run211.root");
+  TGraphErrors* g = (TGraphErrors*)f->Get("gain_bd0_ch0");
+  g->Draw("AP");
+
+  TF1* fGain = new TF1("fGain","[0]*TMath::Power(x,[1])",1,2000);
+  fGain->SetParNames("a","b");
+  g->Fit("fGain","QR","",1150, 1270);
+  for(i=0; i<5;i++){
+    double a=fGain->GetParameter(0);
+    double b=fGain->GetParameter(1);
+    fGain->SetParameters(a,b);
+    g->Fit("fGain","QR","",1150, 1270);
+  }
+}
