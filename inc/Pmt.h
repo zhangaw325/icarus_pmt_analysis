@@ -43,6 +43,7 @@ class PMT
     void getBoardAndChannel( int pmt_number, int & board, int & channel);
     
     TH1D* getChargeHist(){return h_charge; /*(TH1D*)h_charge->Clone();*/ }
+    TH1D* getLowChargeHist(){return h_charge_small; /*(TH1D*)h_charge->Clone();*/ }
 
     void setHV(double value){m_hv_value = value; }
 
@@ -52,6 +53,7 @@ class PMT
     void clean();
     void initHist();
     void writeHist(TFile* thefile, TDirectory* ampDir, TDirectory* chargeDir);
+    void writeHist(TFile* thefile, TDirectory* ampDir, TDirectory* chargeDir, TDirectory* timeDir);
     bool isIlluminated( int optical_channel );
     bool isHVon(){ if(m_hv_value!=0) is_HVon=true; return is_HVon;}
     
@@ -73,8 +75,10 @@ class PMT
     TH1D *h_amplitude; //amplitude of pulse
     TH1D *h_amplitude_low; // amplitude of pulse in a smaller range
     TH1D *h_charge; // charge of pulse
+    TH1D* h_charge_small; // just make another histogram to hold 
     TH1D* h_pulsetime; //start time of pulse 
     TH1D* h_pulsepeaktime; //peak time of pulse
+    TH1D* h_pulsewidth; // width of pulse
     TH1I* h_NbOfPulse; // number of pulses in a waveform
 
 };

@@ -39,12 +39,15 @@ CaliGainNovData::CaliGainNovData(){
 CaliGainNovData::CaliGainNovData(int board, int channel):m_board(board),m_ch(channel)
 {
       chargehist.resize(0);
+      lowchargehist.resize(0);
       voltages.resize(0);
 }
 
 CaliGainNovData::~CaliGainNovData(){
-  for(int i=0; i<(int)chargehist.size(); i++)
+  for(int i=0; i<(int)chargehist.size(); i++){
     delete chargehist[i]; 
+    delete lowchargehist[i];
+  }
 }
 
 void CaliGainNovData::Initialize(vector<TH1D*>  hist, vector<double>  hv){
@@ -59,6 +62,10 @@ void CaliGainNovData::Initialize(vector<TH1D*>  hist, vector<double>  hv){
 void CaliGainNovData::loadOneHist(TH1D* hist, double hv){
     chargehist.push_back(hist);
     voltages.push_back(hv);
+}
+
+void CaliGainNovData::loadOneLowChargeHist(TH1D* hist){
+    lowchargehist.push_back(hist);
 }
 
 void CaliGainNovData::plotHist(){
@@ -111,9 +118,9 @@ double CaliGainNovData::idealResponse(double npe,
   double chi2 = 0;
   for(int i=0; i<npoints; i++){
     int nbins = (int)ds.ghist[i]->GetNbinsX();//200;
-
     for(int j=0; j<nbins-1; j++){
       double x = ds.ghist[i]->GetBinCenter(j+1);
+      if(x<0.5) continue;
       double y = ds.ghist[i]->GetBinContent(j+1);
       //fstream fouttest("testout.txt",ios::out|ios::app);
       //if(i==0) {fouttest<<j<<x<<"\t"<<y<<endl;}
@@ -147,9 +154,29 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
     if(chargehist.size()==0){ cout<<"fitGainCurve will not work if no data points"<<endl; exit(0); }
 
     // set the global variables to be used by the fitter
-    for(int i=0; i< (int)chargehist.size(); i++){
-        ds.ghist.push_back(chargehist[i]);
-        ds.gv.push_back(voltages[i]);
+    // try to determinie whether the normal charge or lowcharge distributions 
+    // to be used
+    int bin1 = lowchargehist[0]->GetXaxis()->FindBin(-0.1);
+    int bin2 = lowchargehist[0]->GetXaxis()->FindBin(0.1);
+    int bin3 = lowchargehist[0]->GetXaxis()->FindBin(0.5);
+    int bin4 = lowchargehist[0]->GetNbinsX();
+    bool flag_lowcharge = false;
+    // if near 0 pC there are entries, use low charge
+    // otherwise use normal charge
+    if(lowchargehist[0]->Integral( bin1, bin2 ) > 0 ){
+      // use low charge hist in the fit
+      flag_lowcharge = true;
+      for(int i=0; i< (int)lowchargehist.size(); i++){
+          ds.ghist.push_back(lowchargehist[i]);
+          ds.gv.push_back(voltages[i]);
+      }
+    }
+    else{
+      // use normal charge hist in the fit
+      for(int i=0; i< (int)chargehist.size(); i++){
+          ds.ghist.push_back(chargehist[i]);
+          ds.gv.push_back(voltages[i]);
+      }
     }
 
     // define number of parameters and their initial values
@@ -159,7 +186,7 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
                        1.0, 0.5, chargehist[0]->Integral()/2.0,
                        1.0, 0.5, chargehist[1]->Integral()/2.0,
                        1.0, 0.5, chargehist[2]->Integral()/2.0} ;
-    double step[n_pars]={0.5, 0.1, 0.1, 20, 0.1, 0.1, 20, 0.1, 0.1, 20};
+    double step[n_pars]={0.5, 0.1, 0.1, 10, 0.1, 0.1, 10, 0.1, 0.1, 10};
     double minVal[n_pars]={0, 0.01, 0.001, 0, 0.01, 0.001, 0, 0.01, 0.001, 0};
     double maxVal[n_pars]={50, 10, 10,chargehist[0]->Integral()*2.0, 
                           10, 10,chargehist[1]->Integral()*2.0, 
@@ -169,6 +196,21 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
                             "q2", "w2", "a2",
                             "q3", "w3", "a3"
                            };
+
+    // modify the initial parameters if low charge histogram is to be fit
+    if(flag_lowcharge==true){
+      //vstart[0] = 1.0;
+      step[0]= 0.05;
+      //maxVal[0]= 10;
+      for(int i=0; i< (int)lowchargehist.size(); i++){
+        vstart[i*3+3] = lowchargehist[i]->Integral(bin3, bin4)/2.0;
+        maxVal[i*3+3] = lowchargehist[i]->Integral(bin3, bin4)*2.0;
+        step[i*3+1] = 0.05;
+        vstart[0] = lowchargehist[i]->GetMean()/1.6;
+        if(vstart[0]<1) vstart[0]=1;
+      }
+    }
+
     // set the fitter: use TMinuit
     TMinuit* minimizer = new TMinuit(n_pars);
     // the fit function is set
@@ -242,11 +284,28 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
     IdealChargeFunction idealchargePlot_obj; // hard coded 
     TF1* func[3];
     for(int i=0; i<(int)chargehist.size(); i++){
-      if(i==0) chargehist[i]->Draw();
-      else chargehist[i]->Draw("same");
-      chargehist[i]->SetLineColor(i+1);
+      if(i==0) {
+        if(flag_lowcharge==false)
+          chargehist[i]->Draw(); 
+        else lowchargehist[i]->Draw();
+      }
+      else {
+        if(flag_lowcharge==false)
+          chargehist[i]->Draw("same");
+        else lowchargehist[i]->Draw("same");
+      }
+      if(flag_lowcharge==false){
+        chargehist[i]->SetLineColor(i+1);
+        chargehist[i]->Write();
+      }
+      else{
+        lowchargehist[i]->SetLineColor(i+1);
+        lowchargehist[i]->Write();
+      }
       sprintf(gname,"idealfunc%d",i);
-      func[i] = new TF1(gname,idealchargePlot_obj,0, 100, 4);
+      if(flag_lowcharge==false)
+        func[i] = new TF1(gname,idealchargePlot_obj,0, 100, 4);
+      else  func[i] = new TF1(gname,idealchargePlot_obj,0.2, 20, 4);
       func[i]->SetParNames("mu","q0","sigma","amp.");
       func[i]->SetParameters(outpar[0],
                           outpar[i*chargehist.size()+1],
@@ -259,7 +318,8 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
     leg->SetHeader("HV values");
     for(int i=0; i<(int)chargehist.size(); i++){
       sprintf(gname, "%.1f", voltages[i]);
-      leg->AddEntry(chargehist[i],gname,"lp");
+      if(flag_lowcharge==false) leg->AddEntry(chargehist[i],gname,"lp");
+      else  leg->AddEntry(lowchargehist[i],gname,"lp");
     }
     leg->Draw(); 
     TPaveText* pt = new TPaveText(0.5,0.5,0.9,0.9, "brNDC");   

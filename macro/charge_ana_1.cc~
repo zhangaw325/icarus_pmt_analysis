@@ -132,6 +132,7 @@ void charge_ana_1(string metadatafile="metadata2.txt"){
     ofile->cd();
     TDirectory* ampDir = ofile->mkdir("AmplitudeDir");
     TDirectory* chargeDir = ofile->mkdir("ChargeDir");
+    TDirectory* timeDir = ofile->mkdir("timeDir");
     for( int board=0; board<nboards; board++ )
     {
       for( int channel=0; channel<nchannels; channel++ )
@@ -142,12 +143,13 @@ void charge_ana_1(string metadatafile="metadata2.txt"){
            //cout<< "HV on for board "<<board<<", ch "<<channel<<": "<<this_hv_value<<endl;
            // Fit the charge distribution with the ideal response
            // I don't do it now because I will do global fit
-            pmts[board][channel]->FitChargeWithIdeal();
+            //pmts[board][channel]->FitChargeWithIdeal();
 
            allChargeHist[board][channel]->loadOneHist( pmts[board][channel]->getChargeHist(),  hvtable[channel] );
+           allChargeHist[board][channel]->loadOneLowChargeHist( pmts[board][channel]->getLowChargeHist());
 
         }
-        pmts[board][channel]->writeHist(ofile, ampDir, chargeDir);
+        pmts[board][channel]->writeHist(ofile, ampDir, chargeDir, timeDir);
       }
     }  
 

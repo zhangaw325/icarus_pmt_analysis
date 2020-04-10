@@ -25,10 +25,12 @@ class CaliGainNovData
     void Initialize(vector<TH1D*>  hist, vector<double> v);
 
     void loadOneHist(TH1D* hist, double hv);
+    void loadOneLowChargeHist(TH1D* hist);
     void plotHist();
 
     int getNbOfDataPoints(){return (int)voltages.size();}
     vector<TH1D*> getHistograms(){return chargehist; };
+    vector<TH1D*> getLowChargeHist(){return lowchargehist;}
 
     void fitGainCurve(TFile* ofile);
 
@@ -39,6 +41,7 @@ class CaliGainNovData
   private:
 
     vector<TH1D*> chargehist;
+    vector<TH1D*> lowchargehist;
     vector<double> voltages;
     int m_board;
     int m_ch;

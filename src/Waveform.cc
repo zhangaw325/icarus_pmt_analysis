@@ -182,7 +182,11 @@ void Waveform::ComputePulseCharacteristics(){
   // this will give amplitude, charge, pulse width of the first pulse
   double amp = 0., charge=0;
   
-  for( int t=m_start_time; t<m_end_time; t++ )
+  //for( int t=m_start_time; t<m_end_time; t++ )
+  // here I force the charge to be integrated in a 100 ns window, 
+  // starting from a little earlier than the pulse time.
+  int startbin = 210, nbins=50;;
+  for( int t=startbin; t<startbin+nbins; t++ )
   {
     if( m_waveform.at(t) < amp ){ amp = m_waveform.at(t); m_peak_time = t; }
     charge += abs(m_waveform.at(t));
