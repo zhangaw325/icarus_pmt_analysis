@@ -60,11 +60,11 @@ void Waveform::loadData( Rawdigits_t raw_waveform )
 {
   m_nsamples=int(raw_waveform.size());
   m_raw_waveform = raw_waveform;
-  for( auto w : raw_waveform ){ m_waveform.push_back( double(w) ); }
+  for( double w : raw_waveform ){ m_waveform.push_back( double(w) ); }
   BaselineSubtraction();
-  if(hasPulse(m_nsigma)){
+  //if(hasPulse(m_nsigma)){
     ComputePulseCharacteristics();
-  }
+  //}
 };
 
 //------------------------------------------------------------------------------
@@ -180,21 +180,22 @@ bool Waveform::hasPulse( double n_sigma )
 void Waveform::ComputePulseCharacteristics(){
 
   // this will give amplitude, charge, pulse width of the first pulse
-  double amp = 0., charge=0;
+  double amp = 0.0, charge=0.0;
   
   //for( int t=m_start_time; t<m_end_time; t++ )
   // here I force the charge to be integrated in a 100 ns window, 
   // starting from a little earlier than the pulse time.
-  int startbin = 210, nbins=50;;
+  int startbin = 210, nbins=50;
   for( int t=startbin; t<startbin+nbins; t++ )
   {
     if( m_waveform.at(t) < amp ){ amp = m_waveform.at(t); m_peak_time = t; }
-    charge += abs(m_waveform.at(t));
+    //charge += abs(m_waveform.at(t));
+    charge += m_waveform.at(t); // should not take abs()
   }
 
   m_width = (m_end_time-m_start_time);
   m_amplitude = amp;
-  m_integral = charge * 0.122*2.0*0.02; // the Q converting factor
+  m_integral = -1.0*charge * 0.122*2.0*0.02; // the Q converting factor
 
   // we count for number of pulses in a separate function
   CountingPulses();

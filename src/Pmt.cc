@@ -75,6 +75,13 @@ void PMT::initHist()
   h_charge_small = new TH1D(hname, hname, 500,-5,45);
   h_charge_small->SetXTitle("Charge (pC)");
   h_charge_small->SetYTitle("Counts");
+  // for charge histograms for the small charge case, finest bin
+  /*
+  sprintf(hname, "hFinest_run%d_board%d_ch%d", m_run , m_board, m_channel);
+  h_charge_finest = new TH1D(hname, hname, 10000,-5,45);
+  h_charge_finest->SetXTitle("Charge (pC)");
+  h_charge_finest->SetYTitle("Counts");
+  */
   // for pulse time
   sprintf(hname, "hPulseTime_run%d_board%d_ch%d", m_run, m_board, m_channel);
   h_pulsetime = new TH1D(hname, hname, 200,-1,-1);//Try to autobin
@@ -132,7 +139,8 @@ void PMT::loadWaveform( Waveform *waveform )
 
   // Fetch the relevant quantities from the waveform
   double amplitude = abs( waveform->getAmplitude() );
-  double charge = abs( waveform->getCharge() );
+//  double charge = abs( waveform->getCharge() );
+    double charge = waveform->getCharge() ; // no abs for charge
   double pulsestarttime = waveform->getStartTime();
   double pulsepeaktime = waveform->getPeakTime();
   double pulsewidth = waveform->getWidth();
@@ -144,6 +152,7 @@ void PMT::loadWaveform( Waveform *waveform )
 
   h_charge->Fill(charge);
   h_charge_small->Fill(charge);
+  //h_charge_finest->Fill(charge);
 
   h_pulsetime->Fill(pulsestarttime);
   h_pulsepeaktime->Fill(pulsepeaktime);
@@ -204,6 +213,7 @@ void PMT::writeHist(TFile* thefile, TDirectory* ampDir, TDirectory* chargeDir)
   chargeDir->cd();
   h_charge->Write();
   h_charge_small->Write();
+  //h_charge_finest->Write();
 
   TDirectory* timeDir = thefile->mkdir("TimeDir");
   h_pulsetime->Write();
@@ -225,6 +235,7 @@ void PMT::writeHist(TFile* thefile, TDirectory* ampDir, TDirectory* chargeDir, T
   chargeDir->cd();
   h_charge->Write();
   h_charge_small->Write();
+  //h_charge_finest->Write();
 
   timeDir->cd();
   h_pulsetime->Write();

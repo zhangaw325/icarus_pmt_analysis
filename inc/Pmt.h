@@ -76,6 +76,7 @@ class PMT
     TH1D *h_amplitude_low; // amplitude of pulse in a smaller range
     TH1D *h_charge; // charge of pulse
     TH1D* h_charge_small; // just make another histogram to hold 
+    //TH1D* h_charge_finest; // the finest bin size: want to check pedestal
     TH1D* h_pulsetime; //start time of pulse 
     TH1D* h_pulsepeaktime; //peak time of pulse
     TH1D* h_pulsewidth; // width of pulse

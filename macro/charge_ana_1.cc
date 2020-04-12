@@ -92,6 +92,8 @@ void charge_ana_1(string metadatafile="metadata2.txt"){
         for(int channel=0; channel<nchannels; channel++)
         {
 
+          //if(channel!=8 && channel!=7) continue;
+
           // Create the WAVEFORM OBJECT
           Waveform *waveform = new Waveform(run, subrun ,e, board, channel, nsigma);
 
@@ -137,6 +139,9 @@ void charge_ana_1(string metadatafile="metadata2.txt"){
     {
       for( int channel=0; channel<nchannels; channel++ )
       {
+
+        //if(channel!=8 && channel!=7) continue;
+
         if( pmts[board][channel]->isHVon() ){
          
            //double this_hv_value = pmts[board][channel]->getHV();
@@ -168,20 +173,27 @@ void charge_ana_1(string metadatafile="metadata2.txt"){
   //cTest->SaveAs("testplot.png");
 
   // okay, let's do our global fit
-  cout<<"Now we will fit all charge distributions \n"
-      <<" and plot gain vs hv " <<endl;
-  char name[100];
-  sprintf(name, "gain_curves_result_run%d.root",run);
-  TFile* gainfile = new TFile(name,"recreate");
-  for(int board=0; board<nboards; board++){
-    for(int ch=0; ch<nchannels; ch++){
-      if( allChargeHist[board][ch]->getNbOfDataPoints() == 0 ) continue;
-      cout <<" .. fitting board "<<board<<", ch "<<ch<<endl;
+  bool dofit = true;
+  if(dofit){
+    cout<<"Now we will fit all charge distributions \n"
+        <<" and plot gain vs hv " <<endl;
+    char name[100];
+    sprintf(name, "gain_curves_result_run%d.root",run);
+    TFile* gainfile = new TFile(name,"recreate");
+    for(int board=0; board<nboards; board++){
+      for(int ch=0; ch<nchannels; ch++){
 
-      allChargeHist[board][ch]->fitGainCurve(gainfile );
+        //if(ch!=8 && ch!=7) continue;
+
+        if( allChargeHist[board][ch]->getNbOfDataPoints() == 0 )
+          continue;
+        cout <<" .. fitting board "<<board<<", ch "<<ch<<endl;
+
+        allChargeHist[board][ch]->fitGainCurve(gainfile );
+      }
     }
-  }
-  gainfile->Close();
+    gainfile->Close();
+  }//end dofit
 
   cout<<"Success, exiting ..."<<endl;
   exit(0);
