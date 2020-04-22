@@ -3,6 +3,7 @@
 #include "Pmt.h"
 #include "CaliGainNovData.h"
 #include "IdealChargeFunction.h"
+#include "ChargeFunctionWithPedestal.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -11,9 +12,18 @@
 #include "TDirectory.h"
 #include "TGraph.h"
 #include "TROOT.h"
+#include "TStyle.h"
+#include "TSystem.h"
+#include "TMinuit.h"
 
 
-void charge_ana_1(string metadatafile="metadata2.txt"){
+int main(int argc, char* argv[] ) {
+
+  //gSystem->Load("libMinuit");
+
+  //string metadatafile="metadata1.txt"
+  string metadatafile (argv[1]);
+  cout<<metadatafile<<endl;
 
   // turn off canvas display during running.
   // also stop showing statbox on histograms
@@ -182,7 +192,7 @@ void charge_ana_1(string metadatafile="metadata2.txt"){
     TFile* gainfile = new TFile(name,"recreate");
     for(int board=0; board<nboards; board++){
       for(int ch=0; ch<nchannels; ch++){
-
+        //if(ch!=8 ) continue;
         //if(ch!=8 && ch!=7) continue;
 
         if( allChargeHist[board][ch]->getNbOfDataPoints() == 0 )
@@ -196,5 +206,6 @@ void charge_ana_1(string metadatafile="metadata2.txt"){
   }//end dofit
 
   cout<<"Success, exiting ..."<<endl;
-  exit(0);
+  //exit(0);
+  return 0;
 }

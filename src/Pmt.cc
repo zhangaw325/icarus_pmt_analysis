@@ -67,7 +67,7 @@ void PMT::initHist()
 
   // for charge histograms
   sprintf(hname, "hQ_run%d_board%d_ch%d", m_run , m_board, m_channel);
-  h_charge = new TH1D(hname, hname, 200,-5,95);
+  h_charge = new TH1D(hname, hname, 500,-5,95);
   h_charge->SetXTitle("Charge (pC)");
   h_charge->SetYTitle("Counts");
   // for charge histograms for the small charge case
