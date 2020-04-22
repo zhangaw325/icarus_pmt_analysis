@@ -206,7 +206,7 @@ void CaliGainNovData::plotGainCurveHighCharge(TFile* ofile, bool flagLowCharge){
                             vresult[i*3+3]);
 
       func[i]->SetNpx(600);
-      func[i]->SetLineColor(1); func[i]->SetLineStyle(2);
+      func[i]->SetLineColor(i+1); func[i]->SetLineStyle(2);
       func[i]->Draw("same");
     }
     TLegend* leg = new TLegend(0.75,0.3,0.9,0.5);
@@ -238,7 +238,6 @@ void CaliGainNovData::plotGainCurveHighCharge(TFile* ofile, bool flagLowCharge){
     cCharge->Modified(); cCharge->Update();
     cCharge->Write();
     cCharge->Close();
-  
 }
 
 // plot gain curve (high charge)
@@ -296,7 +295,7 @@ void CaliGainNovData::plotGainCurveLowCharge(TFile* ofile, bool flagLowCharge){
         func[i]->SetParameter(m+1, vresult[i*7+m+1]);
       }
       func[i]->SetNpx(600);
-      func[i]->SetLineColor(1); func[i]->SetLineStyle(2);
+      func[i]->SetLineColor(i+1); func[i]->SetLineStyle(2);
       func[i]->Draw("same");
     }
     TLegend* leg = new TLegend(0.8,0.3,0.9,0.5);

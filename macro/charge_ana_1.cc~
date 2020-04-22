@@ -17,12 +17,12 @@
 #include "TMinuit.h"
 
 
-int main(int argc, char* argv[] ) {
-
+//int main(int argc, char* argv[] ) {
+void charge_ana_1(string metadatafile="metadata1.txt"){
   //gSystem->Load("libMinuit");
 
   //string metadatafile="metadata1.txt"
-  string metadatafile (argv[4]);
+//  string metadatafile (argv[1]);
   cout<<metadatafile<<endl;
 
   // turn off canvas display during running.
