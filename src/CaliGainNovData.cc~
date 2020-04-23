@@ -124,8 +124,10 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
           ds.ghist.push_back(lowchargehist[i]);
           ds.gv.push_back(voltages[i]);
       }
-      fitLowCharge_fullExpr();
-      plotGainCurveLowCharge(ofile,flag_lowcharge);
+      //fitLowCharge_fullExpr();
+      //plotGainCurveLowCharge(ofile,flag_lowcharge);
+      fitLowCharge_expGaus();
+      plotGainCurveLowCharge_expGaus(ofile,flag_lowcharge);
     }
     else{
       cout<<"fitting high charge distribution"<<endl;
@@ -139,6 +141,8 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
       plotGainCurveHighCharge(ofile,flag_lowcharge);
     }
 
+    SaveJointFitParameters(flag_lowcharge);
+
     //fitChargeDistributions();
 
     // in the end of the fit function, need to reset the global variables
@@ -147,6 +151,20 @@ void CaliGainNovData::fitGainCurve(TFile* ofile){
 
     // plot gain curve
     //plotGainCurve(ofile, flag_lowcharge);
+}
+
+// save the joint fit parameters
+void CaliGainNovData::SaveJointFitParameters(bool flag){
+  string histname ( ds.ghist[0]->GetName() );
+  string filename = histname + "_fitPars.txt";
+  fstream fout(filename.c_str(), ios::out);
+  fout<<histname<<"\t lowcharge_flag\t"<<flag<<"\t";
+  fout<<"chi2\t"<<minChi2<<"\tndf\t"<<ds.ndf<<endl;
+  for(int i=0; i<vresult.size(); i++){
+     fout<<vresult[i]<<"\t"<<verrors[i]<<"\t";
+  }
+  fout<<endl;
+  fout.close();
 }
 
 // plot gain curve (high charge)
@@ -240,7 +258,7 @@ void CaliGainNovData::plotGainCurveHighCharge(TFile* ofile, bool flagLowCharge){
     cCharge->Close();
 }
 
-// plot gain curve (high charge)
+// plot gain curve (low charge), full_exp
 void CaliGainNovData::plotGainCurveLowCharge(TFile* ofile, bool flagLowCharge){
 
     char gname[100]; 
@@ -295,7 +313,7 @@ void CaliGainNovData::plotGainCurveLowCharge(TFile* ofile, bool flagLowCharge){
         func[i]->SetParameter(m+1, vresult[i*7+m+1]);
       }
       func[i]->SetNpx(600);
-      func[i]->SetLineColor(1); func[i]->SetLineStyle(2);
+      func[i]->SetLineColor(i+1); func[i]->SetLineStyle(2);
       func[i]->Draw("same");
     }
     TLegend* leg = new TLegend(0.8,0.3,0.9,0.5);
@@ -346,6 +364,109 @@ void CaliGainNovData::plotGainCurveLowCharge(TFile* ofile, bool flagLowCharge){
   
 }
 
+// plot gain curve (low charge), exp-mod Gaus
+void CaliGainNovData::plotGainCurveLowCharge_expGaus(TFile* ofile, bool flagLowCharge){
+
+    char gname[100]; 
+    TCanvas* cGain = new TCanvas();
+    sprintf(gname, "c_gain_bd%d_ch%d",m_board,m_ch);
+    cGain->SetName(gname);
+    TGraphErrors* gGain = new TGraphErrors();
+    sprintf(gname, "gain_bd%d_ch%d",m_board,m_ch);
+    gGain->SetName(gname);    gGain->SetTitle(gname);
+    gGain->GetXaxis()->SetTitle("HV (V)");
+    gGain->GetYaxis()->SetTitle("Gain (10^{7})");
+    for(int i=0; i< (int)voltages.size(); i++){
+        gGain->SetPoint(i, voltages[i], vresult[i*7+1]/1.6);
+        gGain->SetPointError(i, 0, verrors[i*7+2]/1.6);
+    }
+    gGain->Draw("ALP");
+    gGain->SetMarkerStyle(8);
+    // fit the gain curve 
+    TF1* fGain = new TF1("fGain","[0]*TMath::Power(x,[1])",1,2000);
+    fGain->SetParNames("a","b");
+    fGain->SetParameters(1e-24,7.5);
+    //gGain->Fit("fGain","QR","",voltages[0]-10, voltages[2]+10);
+    for(int i=0; i<5;i++){
+      double a=fGain->GetParameter(0);
+      double b=fGain->GetParameter(1);
+      fGain->SetParameters(a,b);
+      gGain->Fit("fGain","QR","",voltages[0]-10, voltages[2]+10);
+    }
+    ofile->cd();
+    gGain->Write();
+    cGain->Close();
+    // plot charge distributions and the fit curves
+    TCanvas* cCharge = new TCanvas();
+    sprintf(gname,"cChargeDis_bd%d_ch%d",m_board,m_ch);
+    cCharge->SetName(gname);
+    ChargeFunctionWithPedestal_expGaus myChargeFunctionWithRealPedestal_obj; // hard coded  
+    TF1* func[3];
+    for(int i=0; i<(int)lowchargehist.size(); i++){
+      if(i==0) {
+        lowchargehist[i]->Draw();
+      }
+      else {
+        lowchargehist[i]->Draw("same");
+      }
+      lowchargehist[i]->SetLineColor(i+1);
+      lowchargehist[i]->Write();
+
+      sprintf(gname,"myresponsefunc%d",i);
+      func[i] = new TF1(gname,myChargeFunctionWithRealPedestal_obj,-1, 50, 8);
+      func[i]->SetParameters(vresult[0], vresult[i*3+1], vresult[i*3+2], vresult[i*3+3], vresult[i*4+10], vresult[i*4+11], vresult[i*4+12], vresult[i*4+13]);
+      func[i]->SetNpx(600);
+      func[i]->SetLineColor(i+1); func[i]->SetLineStyle(2);
+      func[i]->Draw("same");
+    }
+    TLegend* leg = new TLegend(0.8,0.3,0.9,0.5);
+    leg->SetHeader("HV values");
+    for(int i=0; i<(int)lowchargehist.size(); i++){
+      sprintf(gname, "%.1f", voltages[i]);
+      leg->AddEntry(lowchargehist[i],gname,"lp");
+    }
+    leg->Draw(); 
+    TPaveText* pt = new TPaveText(0.5,0.5,0.9,0.9, "brNDC");   
+    sprintf(gname, "Fit status: %d, #chi^{2}/ndf: %.1f/%d", m_fitstatus, minChi2, ds.ndf-ds.npars_lowcharge);
+    pt->AddText(gname);
+    sprintf(gname,"npe: %.2f #pm %.2f", vresult[0], verrors[0]);
+    pt->AddText(gname);
+    pt->AddText("# , q , #sigma, a:");
+    for(int i=0; i<(int)lowchargehist.size();i++){
+      sprintf(gname, "%d, %.2f #pm %.2f, %.2f #pm %.2f, %.0f #pm %.0f", i+1,
+                 vresult[i*3+1], verrors[i*3+1],
+                 vresult[i*3+2], verrors[i*3+2],
+                 vresult[i*3+3], verrors[i*3+3]);
+      pt->AddText(gname);
+    }
+    pt->Draw();
+    pt->SetBorderSize(1);
+    pt->SetFillColor(0);
+    pt->SetTextFont(42);
+    pt->SetTextAlign(12);
+
+    TPaveText* pt1 = new TPaveText(0.5, 0.3, 0.8, 0.5, "brNDC");
+    pt1->AddText("other parameters");
+    for(int i=0; i<(int)chargehist.size();i++){
+        sprintf(gname, "%.2f #pm %.2f, %.2f #pm %.2f, %.2f #pm %.2f, %.0f #pm %.0f",
+                   vresult[i*4+10], verrors[i*4+10],
+                   vresult[i*4+11], verrors[i*4+11],
+                   vresult[i*4+12], verrors[i*4+12],
+                   vresult[i*4+13], verrors[i*4+13]);
+        pt1->AddText(gname);
+    }
+    pt1->Draw();
+    pt1->SetBorderSize(1);
+    pt1->SetFillColor(0);
+    pt1->SetTextFont(42);
+    pt1->SetTextAlign(12);
+
+    cCharge->Modified(); cCharge->Update();
+    cCharge->Write();
+    cCharge->Close();
+  
+}
+
 // fit charge distributions
 void CaliGainNovData::fitLowCharge_fullExpr(){
     initializeParVectors(ds.npars_lowcharge);
@@ -375,7 +496,7 @@ void CaliGainNovData::fitLowCharge_fullExpr(){
         step[i*7+2] = 0.02; // step for sigma1
         step[i*7+3] = 0.01; // step for q0
         step[i*7+4] = 0.01; // step for sigma0
-        step[i*7+5] = 0.01; // step for c0;
+        step[i*7+5] = 1; // step for c0;
         step[i*7+6] = 0.05; // step for w;
         step[i*7+7] = 20; // step for a
 
@@ -383,11 +504,11 @@ void CaliGainNovData::fitLowCharge_fullExpr(){
         vstart[i*7+2] = 0.5; // start for sigma1
         vstart[i*7+3] = 0; // start for q0
         vstart[i*7+4] = 0.1; // start for sigma0
-        vstart[i*7+5] = 10; // start for c0
+        vstart[i*7+5] = 1; // start for c0
         vstart[i*7+6] = 0.3; // start for w
         vstart[i*7+7] = ds.ghist[i]->Integral()*TMath::Exp(-1.0*vstart[0]); // start for a
     }
-    
+    vstart[7+5]=2500;
     // set the fitter: use TMinuit
     //gSystem->Load("libMinuit");
     TMinuit* minimizer = new TMinuit(npars); // was ds.npars here
@@ -546,7 +667,7 @@ void CaliGainNovData::fitLowCharge(){
 }
 */
 
-/*
+
 // fit high charge distributions
 void CaliGainNovData::fitLowCharge_expGaus(){ // pedestal with expoentially-modified Guassian
 
@@ -660,7 +781,7 @@ void CaliGainNovData::fitLowCharge_expGaus(){ // pedestal with expoentially-modi
     minChi2 = amin;
 
 }
-*/
+
 
 // fit high charge distributions
 void CaliGainNovData::fitHighCharge(){
@@ -825,11 +946,11 @@ double CaliGainNovData::mygainResponse(double p0,
       int nbins = (int)ds.ghist[i]->GetNbinsX();
 
       prediction = 0;
-      for(int j=1; j<nbins-1; j++){
+      for(int j=0; j<nbins; j++){
           double x = ds.ghist[i]->GetBinCenter(j+1);
           double y = ds.ghist[i]->GetBinContent(j+1);
 
-          if(x>50) continue;
+          //if(x>50) continue;
 
           pdf1[i] = TMath::Exp(-1.0*mu) * ( (1.0-w[i])*myGausPDF(x,q0[i],sigma0[i])
                                       +w[i]*myExpGausPDF(x,q0[i],sigma0[i],c0[i]) );
@@ -845,7 +966,7 @@ double CaliGainNovData::mygainResponse(double p0,
           //                                   <<sigma[i]<<"\t"<<sigma0[i]<<"\t"<<c0[i]<<"\t"<<w[i]<<endl;
           //}
 
-          for(int k=2; k<=15; k++){
+          for(int k=2; k<=20; k++){
               pdf3[i] = TMath::Power(mu, k)*TMath::Exp(-1.0*mu)/TMath::Factorial(k)
                       * ( (1.0-w[i])*myGausPDF(x,q[i]*k+q0[i], TMath::Sqrt(sigma[i]*sigma[i]*k+sigma0[i]*sigma0[i]))
                        + w[i]*myExpGausPDF(x,q[i]*k+q0[i], TMath::Sqrt(sigma[i]*sigma[i]*k+sigma0[i]*sigma0[i]), c0[i]) ) ;
@@ -861,9 +982,10 @@ double CaliGainNovData::mygainResponse(double p0,
 
           // apply the poisson likelihood
           //if(prediction!=0){
-            if(y!=0)
+            if(y!=0){
               chi2[i] += TMath::Power( y-prediction, 2)/y;
               ndf++;
+            }
             //else chi2[i] += 2.0*prediction;
             //cout<<"chi2 "<<i<<chi2[i]<<"\t"<<prediction<<"\t"<<y<<endl;
           //}
@@ -939,7 +1061,7 @@ double CaliGainNovData::ResponseWithPedestal(double npe,
 }
 */
 
-/*
+
 // --------------------------------------------------------------------
 // this is the function that is used at this moment
 // for computing the chi2, using the response with pedestal, expoentially modified guassian
@@ -1002,7 +1124,7 @@ double CaliGainNovData::ResponseWithPedestal_expGaus(double npe,
   return chi2[0]+chi2[1]+chi2[2];
 
 }
-*/
+
 
 // --------------------------------------------------------------------
 // this is the real function that is used at this moment
@@ -1042,9 +1164,10 @@ double CaliGainNovData::idealResponse(double npe,
       }      
 
       //if(prediction!=0){
-        if(y!=0)
+        if(y!=0){
           chi2 += TMath::Power( y-prediction*amp[i] , 2)/y; // the chi2 formula Neyman
           ndf++;
+        }
           //chi2 += 2.0*(prediction*amp[i] - y + y*TMath::Log(y/prediction*amp[i]) );  // Poisson chi2
         //if(y==0) chi2 += 2.0*prediction*amp[i];
       //}
@@ -1074,14 +1197,14 @@ void CaliGainNovData::myfcnWithPedestal(int &npar, double * deriv, double &f, do
 }
 */
 
-/*
+
 // --------------------------------------------------------------------------------
 // this is the function to be called by the fitter
 // inside it will call another function to do real calculations
 void CaliGainNovData::myfcnWithPedestal_expGaus(int &npar, double * deriv, double &f, double * par, int iflag){
   f = fitobj->ResponseWithPedestal_expGaus(par[0], par[1], par[2], par[3], par[4], par[5], par[6], par[7], par[8], par[9], par[10], par[11], par[12], par[13], par[14], par[15], par[16], par[17], par[18], par[19], par[20], par[21]);
 }
-*/
+
 
 // --------------------------------------------------------------------------------
 // this is the function to be called by the fitter

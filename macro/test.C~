@@ -82,8 +82,8 @@ double myChargeFunc(double * x, double * par){
   double w = par[6]; // the weight: probability of dark pulse 
   double a = par[7]; // final scale factor or amplitude
 
-  //double pdf1 = TMath::Exp(-1.0*mu) * ( (1.0-w)*myGausPDF(x[0],q0,sigma0)
-  //                                    +w*myExpGausPDF(x[0],q0,sigma0,c0) );
+  double pdf1 = TMath::Exp(-1.0*mu) * ( (1.0-w)*myGausPDF(x[0],q0,sigma0)
+                                     +w*myExpGausPDF(x[0],q0,sigma0,c0) );
 
   if(TMath::IsNaN(q)) cout<<"q is nan"<<endl;
   if(TMath::IsNaN(sigma)) cout<<"sigma is nan"<<endl;
@@ -93,13 +93,13 @@ double myChargeFunc(double * x, double * par){
   double pdf2 = mu*TMath::Exp(-1.0*mu) * ( (1.0-w)*myGausPDF(x[0],q+q0,TMath::Sqrt(sigma*sigma+sigma0*sigma0))
                                             + w*myExpGausPDF(x[0], q+q0, TMath::Sqrt(sigma*sigma+sigma0*sigma0), c0) );
   double pdf3 = 0;
-  for(int k=2; k<30; k++){
+  for(int k=2; k<20; k++){
     pdf3 += TMath::Power(mu, k)*TMath::Exp(-1.0*mu)/TMath::Factorial(k)
            * ( (1.0-w)*myGausPDF(x[0],q*k+q0, TMath::Sqrt(sigma*sigma*k+sigma0*sigma0))
                + w*myExpGausPDF(x[0],q*k+q0, TMath::Sqrt(sigma*sigma*k+sigma0*sigma0), c0) ) ;
   }
 
-  return a*(pdf2+pdf3);
+  return a*(pdf1+pdf2+pdf3);
 }
 
 void test(){
@@ -118,8 +118,8 @@ void test(){
   }
 */
 
-  TCanvas* c = (TCanvas*)f->Get("cChargeDis_bd0_ch8");
-  TH1D* h = (TH1D*)c->GetPrimitive("hLowQ_run213_board0_ch8");
+  TCanvas* c = (TCanvas*)f->Get("cChargeDis_bd0_ch7");
+  TH1D* h = (TH1D*)c->GetPrimitive("hLowQ_run215_board0_ch7");
   TCanvas* c1 = new TCanvas();
   gStyle->SetOptStat(1);
   gStyle->SetOptFit(1111);
@@ -138,7 +138,7 @@ void test(){
   //f2->SetParameters(0.6, 1, 0.6, 1600, 0, 0.1, 2400, 0.1);
 
   TF1* f2 = new TF1("f2",myChargeFunc,-1,100,8);
-  f2->SetParameters(6, 1, 0.6, 0, 0.1, 10, 0.3, 1600);
+  f2->SetParameters(0.5, 1, 0.6, 0, 0.1, 10, 0.3, 1600);
   //f2->FixParameter(3,0);
   //f2->FixParameter(4,0);
   //TCanvas* c2 = new TCanvas();
@@ -149,7 +149,7 @@ void test(){
   double par[8];
   for(int k=0; k<3;k++){
     for(int i=0;i<8;i++){
-      if(i==3 || i==4) continue;
+      //if(i==3 || i==4) continue;
       par[i]=f2->GetParameter(i);
       f2->SetParameter(i, par[i]);
     }

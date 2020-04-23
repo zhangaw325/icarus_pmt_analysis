@@ -18,7 +18,7 @@
 
 
 int main(int argc, char* argv[] ) {
-//void charge_ana_1(string metadatafile="metadata1.txt"){
+//void charge_ana_1(string metadatafile="metadata2.txt"){
   //gSystem->Load("libMinuit");
 
   //string metadatafile="metadata1.txt"
@@ -192,7 +192,7 @@ int main(int argc, char* argv[] ) {
     TFile* gainfile = new TFile(name,"recreate");
     for(int board=0; board<nboards; board++){
       for(int ch=0; ch<nchannels; ch++){
-        //if(ch!=8 ) continue;
+        //if(ch!=7 ) continue;
         //if(ch!=8 && ch!=7) continue;
 
         if( allChargeHist[board][ch]->getNbOfDataPoints() == 0 )

@@ -36,25 +36,27 @@ class CaliGainNovData
     void fitHighCharge();
     //void fitLowCharge();
     void fitLowCharge_fullExpr();
-    //void fitLowCharge_expGaus();
+    void fitLowCharge_expGaus();
     //void fitChargeDistributions();
     //void plotGainCurve(TFile* ofile, bool flag);
     void plotGainCurveHighCharge(TFile* ofile, bool flag);
     void plotGainCurveLowCharge(TFile* ofile, bool flag);
+    void plotGainCurveLowCharge_expGaus(TFile* ofile, bool flag);
     void initializeParVectors(int npars);
+    void SaveJointFitParameters();
 
     //void myfcn(int &npar, double * deriv, double &f, double * par, int iflag);
     static void myfcn(int &npar, double * deriv, double &f, double * par, int iflag);
     double idealResponse(double mu, double Q1, double w1, double a1, double Q2, double w2, double a2, double Q3, double w3, double a3);
 
-    static void myfcnWithPedestal(int &npar, double * deriv, double &f, double * par, int iflag);
-    double ResponseWithPedestal(double npe,
-                                      double Q1, double w1, double a1,            
-                                      double Q2, double w2, double a2,
-                                      double Q3, double w3, double a3,
-                                      double pedm1, double pedw1, double pedamp1,
-                                      double pedm2, double pedw2, double pedamp2,
-                                      double pedm3, double pedw3, double pedamp3 );
+    //static void myfcnWithPedestal(int &npar, double * deriv, double &f, double * par, int iflag);
+    //double ResponseWithPedestal(double npe,
+    //                                  double Q1, double w1, double a1,            
+    //                                  double Q2, double w2, double a2,
+    //                                  double Q3, double w3, double a3,
+    //                                  double pedm1, double pedw1, double pedamp1,
+    //                                  double pedm2, double pedw2, double pedamp2,
+    //                                  double pedm3, double pedw3, double pedamp3 );
 
     static void myfcnWithPedestal_expGaus(int &npar, double * deriv, double &f, double * par, int iflag);
     double ResponseWithPedestal_expGaus(double npe,
