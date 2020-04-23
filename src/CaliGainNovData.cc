@@ -192,12 +192,30 @@ void CaliGainNovData::plotGainCurveHighCharge(TFile* ofile, bool flagLowCharge){
     fGain->SetParNames("a","b");
     fGain->SetParameters(1e-24,7.5);
     //gGain->Fit("fGain","QR","",voltages[0]-10, voltages[2]+10);
+    double a=0, b=0;
     for(int i=0; i<5;i++){
-      double a=fGain->GetParameter(0);
-      double b=fGain->GetParameter(1);
+      a=fGain->GetParameter(0);
+      b=fGain->GetParameter(1);
       fGain->SetParameters(a,b);
       gGain->Fit("fGain","QR","",voltages[0]-10, voltages[2]+10);
     }
+    a=fGain->GetParameter(0);
+    b=fGain->GetParameter(1);
+    TPaveText* ptGainPar = new TPaveText(0.2,0.7,0.45,0.9,"brNDC");
+    sprintf(gname,"chi2/ndf = %.2f/%d",fGain->GetChisquare(), fGain->GetNDF());
+    ptGainPar->AddText(gname);
+    sprintf(gname,"a = %e #pm %e", a, fGain->GetParError(0));
+    ptGainPar->AddText(gname);
+    sprintf(gname,"k = %.3f #pm %.3f", b, fGain->GetParError(1));
+    ptGainPar->AddText(gname);
+    ptGainPar->Draw();
+    ptGainPar->SetBorderSize(1);
+    ptGainPar->SetFillColor(0);
+    ptGainPar->SetTextFont(42);
+    ptGainPar->SetTextAlign(12);
+    sprintf(gname,"gainCurve_%s.png",ds.ghist[2]->GetName());
+    cGain->SaveAs(gname);
+
     ofile->cd();
     gGain->Write();
     cGain->Close();
@@ -257,6 +275,9 @@ void CaliGainNovData::plotGainCurveHighCharge(TFile* ofile, bool flagLowCharge){
 
     cCharge->Modified(); cCharge->Update();
     cCharge->Write();
+
+    sprintf(gname, "jointFit_%s.png", ds.ghist[2]->GetName());
+    cCharge->SaveAs(gname);
     cCharge->Close();
 }
 
@@ -283,12 +304,30 @@ void CaliGainNovData::plotGainCurveLowCharge(TFile* ofile, bool flagLowCharge){
     fGain->SetParNames("a","b");
     fGain->SetParameters(1e-24,7.5);
     //gGain->Fit("fGain","QR","",voltages[0]-10, voltages[2]+10);
+    double a=0, b=0;
     for(int i=0; i<5;i++){
-      double a=fGain->GetParameter(0);
-      double b=fGain->GetParameter(1);
+      a=fGain->GetParameter(0);
+      b=fGain->GetParameter(1);
       fGain->SetParameters(a,b);
       gGain->Fit("fGain","QR","",voltages[0]-10, voltages[2]+10);
     }
+    a=fGain->GetParameter(0);
+    b=fGain->GetParameter(1);
+    TPaveText* ptGainPar = new TPaveText(0.2,0.7,0.45,0.9,"brNDC");
+    sprintf(gname,"chi2/ndf = %.2f/%d",fGain->GetChisquare(), fGain->GetNDF());
+    ptGainPar->AddText(gname);
+    sprintf(gname,"a = %e #pm %e", a, fGain->GetParError(0));
+    ptGainPar->AddText(gname);
+    sprintf(gname,"k = %.3f #pm %.3f", b, fGain->GetParError(1));
+    ptGainPar->AddText(gname);
+    ptGainPar->Draw();
+    ptGainPar->SetBorderSize(1);
+    ptGainPar->SetFillColor(0);
+    ptGainPar->SetTextFont(42);
+    ptGainPar->SetTextAlign(12);
+    sprintf(gname,"gainCurve_%s.png",ds.ghist[2]->GetName());
+    cGain->SaveAs(gname);
+
     ofile->cd();
     gGain->Write();
     cGain->Close();
@@ -301,6 +340,7 @@ void CaliGainNovData::plotGainCurveLowCharge(TFile* ofile, bool flagLowCharge){
     for(int i=0; i<(int)lowchargehist.size(); i++){
       if(i==0) {
         lowchargehist[i]->Draw();
+        lowchargehist[i]->GetXaxis()->SetRangeUser(-1,20);
       }
       else {
         lowchargehist[i]->Draw("same");
@@ -362,6 +402,9 @@ void CaliGainNovData::plotGainCurveLowCharge(TFile* ofile, bool flagLowCharge){
 
     cCharge->Modified(); cCharge->Update();
     cCharge->Write();
+
+    sprintf(gname, "jointFit_%s.png", ds.ghist[2]->GetName());
+    cCharge->SaveAs(gname);
     cCharge->Close();
   
 }
@@ -389,12 +432,30 @@ void CaliGainNovData::plotGainCurveLowCharge_expGaus(TFile* ofile, bool flagLowC
     fGain->SetParNames("a","b");
     fGain->SetParameters(1e-24,7.5);
     //gGain->Fit("fGain","QR","",voltages[0]-10, voltages[2]+10);
+    double a=0, b=0;
     for(int i=0; i<5;i++){
-      double a=fGain->GetParameter(0);
-      double b=fGain->GetParameter(1);
+      a=fGain->GetParameter(0);
+      b=fGain->GetParameter(1);
       fGain->SetParameters(a,b);
       gGain->Fit("fGain","QR","",voltages[0]-10, voltages[2]+10);
     }
+    a=fGain->GetParameter(0);
+    b=fGain->GetParameter(1);
+    TPaveText* ptGainPar = new TPaveText(0.2,0.7,0.45,0.9,"brNDC");
+    sprintf(gname,"chi2/ndf = %.2f/%d",fGain->GetChisquare(), fGain->GetNDF());
+    ptGainPar->AddText(gname);
+    sprintf(gname,"a = %e #pm %e", a, fGain->GetParError(0));
+    ptGainPar->AddText(gname);
+    sprintf(gname,"k = %.3f #pm %.3f", b, fGain->GetParError(1));
+    ptGainPar->AddText(gname);
+    ptGainPar->Draw();
+    ptGainPar->SetBorderSize(1);
+    ptGainPar->SetFillColor(0);
+    ptGainPar->SetTextFont(42);
+    ptGainPar->SetTextAlign(12);
+    sprintf(gname,"gainCurve_%s.png",ds.ghist[2]->GetName());
+    cGain->SaveAs(gname);
+
     ofile->cd();
     gGain->Write();
     cGain->Close();
@@ -407,6 +468,7 @@ void CaliGainNovData::plotGainCurveLowCharge_expGaus(TFile* ofile, bool flagLowC
     for(int i=0; i<(int)lowchargehist.size(); i++){
       if(i==0) {
         lowchargehist[i]->Draw();
+        lowchargehist[i]->GetXaxis()->SetRangeUser(-1,20);
       }
       else {
         lowchargehist[i]->Draw("same");
@@ -465,6 +527,9 @@ void CaliGainNovData::plotGainCurveLowCharge_expGaus(TFile* ofile, bool flagLowC
 
     cCharge->Modified(); cCharge->Update();
     cCharge->Write();
+
+    sprintf(gname, "jointFit_%s.png", ds.ghist[2]->GetName());
+    cCharge->SaveAs(gname);
     cCharge->Close();
   
 }

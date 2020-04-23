@@ -1,0 +1,190 @@
+#include "Run.h"
+#include "Waveform.h"
+#include "Pmt.h"
+#include "CaliGainNovData.h"
+#include "IdealChargeFunction.h"
+#include "ChargeFunctionWithPedestal.h"
+
+#include "TFile.h"
+#include "TTree.h"
+#include "TChain.h"
+#include "TH1D.h"
+#include "TDirectory.h"
+#include "TGraph.h"
+#include "TROOT.h"
+#include "TStyle.h"
+#include "TSystem.h"
+#include "TMinuit.h"
+
+
+//int main(int argc, char* argv[] ) {
+void time_ana_v1(string metadatafile="metadata2.txt"){
+
+  //string metadatafile="metadata1.txt"
+  //string metadatafile (argv[1]);
+  cout<<metadatafile<<endl;
+
+  // turn off canvas display during running.
+  // also stop showing statbox on histograms
+  gROOT->SetBatch(kTRUE);
+  gStyle->SetOptStat(0);
+
+  string path = "../../process20191121data/";
+
+  const int nboards=1;
+  const int nchannels=16;
+  const double nsigma = 5.0;
+
+  int run, nbsubrun;
+  double hvtable[nchannels];
+
+  fstream fin_meta(metadatafile.c_str(), ios::in);
+
+  /*
+  CaliGainNovData* allChargeHist[nboards][nchannels];// = new CaliGainNovData();  
+  for(int bd=0; bd<nboards; bd++){
+    for(int ch=0; ch<nchannels; ch++){
+      allChargeHist[bd][ch] = new CaliGainNovData(bd,ch);
+    }
+  }
+  */
+
+  while(fin_meta>>run){ // process one run
+    
+    fin_meta>>nbsubrun;
+    // set the HV table
+    for(int i=0; i<nchannels; i++){
+      fin_meta>>hvtable[i]; // here hard coded already by assuming only one board 
+    }
+
+    // add all subruns into one 
+    TChain *tchain =  new TChain("caenv1730dump/events");
+    char filenamecontainer[100];
+    for(int i=0; i<nbsubrun; i++){
+      if(i+1 <10)
+        sprintf(filenamecontainer, "%srun%d_0%d.root", path.c_str(), run, i+1) ;
+      else sprintf(filenamecontainer, "%srun%d_%d.root", path.c_str(), run, i+1) ;
+      //cout << filenamecontainer << endl;
+
+      tchain->Add(filenamecontainer);
+    }
+
+    cout<<"Processing run "<< run << ", with "<< nbsubrun <<" files ..."<<endl;
+
+    std::vector<std::vector<uint16_t> > *data=0; //unsigned short
+    tchain->SetBranchAddress("fWvfmsVec", &data);    
+
+    // prepare PMT containers
+    PMT* pmts[nboards][nchannels];
+    for( int board=0; board<nboards; board++ )
+    {
+      for( int channel=0; channel<nchannels; channel++ )
+      {
+        pmts[board][channel] = new PMT( run, board, channel );
+        pmts[board][channel]->setHV(hvtable[channel]);
+      }
+    }
+
+    // process the waveforms
+    for(int e=0; e<tchain->GetEntries(); e++)
+    {
+      int subrun=1;
+      if(e%1000 ==0){
+        cout << "         evt: " << e << endl;
+        subrun++;
+      }
+      //if(e==2500) break;
+
+      // WE TAKE THE EVENT
+      tchain->GetEvent(e);
+
+      for(int board=0; board<nboards; board++)
+      {
+        for(int channel=0; channel<nchannels; channel++)
+        {
+
+          //if(channel!=8 && channel!=7) continue;
+
+          // Create the WAVEFORM OBJECT
+          Waveform *waveform = new Waveform(run, subrun ,e, board, channel, nsigma);
+
+          // ONCE THE DATA ARE LOADED IN THE WAVEFORM OBJECT, BASELINE IS
+          // AUTOMATICALLY SUBSTRACTED. YOU CAN USE THE FUNCTION "getWaveform()"
+          // TO EXTRACT THE WAVEFORM VECTOR AFTER BASELINE SUBTRACTION OR
+          // "getRawWaveform()" BEFORE BASELINE SUBTRACTION.
+          waveform->loadData((*data).at(channel+nchannels*board));
+
+          pmts[board][channel]->loadWaveform(waveform);
+
+          if(!waveform->isValidWaveform()){ delete waveform; continue;  }
+
+          // Loop over the entries of the waveform after the baseline subtraction
+          // and fill the entries of the histogram h_pmt_rms
+          /*
+          for( float entry : waveform->getWaveform() )
+          {
+            h_pmt_rms[board][channel]->Fill( entry ); // this is distribution of baseline
+          }
+
+          // this is distribution of mean baseline from waveforms
+          h_pmt_baseline[board][channel]->Fill( waveform->getBaselineMean() ); 
+          */
+          delete waveform;
+
+        } // channel
+      } // boards
+    } // event
+    cout<<"      total events "<< tchain->GetEntries() <<endl;
+
+    //****************************************************************************
+    // Output: create an output TFile and write the histogram in it
+    //
+
+    char ofilename[100]; sprintf(ofilename, "Result_run%d_charge.root", run);
+    TFile* ofile=new TFile(ofilename, "RECREATE"); //
+    ofile->cd();
+    TDirectory* ampDir = ofile->mkdir("AmplitudeDir");
+    TDirectory* chargeDir = ofile->mkdir("ChargeDir");
+    TDirectory* timeDir = ofile->mkdir("timeDir");
+    for( int board=0; board<nboards; board++ )
+    {
+      for( int channel=0; channel<nchannels; channel++ )
+      {
+        pmts[board][channel]->writeHist(ofile, ampDir, chargeDir, timeDir);
+      }
+    }  
+
+    ofile->Close();
+
+    cout << "All done for run "<< run << endl;
+
+  }//end run loop
+  
+  fin_meta.close();
+
+
+  // okay, let's do our global fit
+  bool dofit = false;
+  if(dofit){
+    cout<<"Now we will fit all charge distributions \n"
+        <<" and plot gain vs hv " <<endl;
+    char name[100];
+    sprintf(name, "gain_curves_result_run%d.root",run);
+    TFile* gainfile = new TFile(name,"recreate");
+    for(int board=0; board<nboards; board++){
+      for(int ch=0; ch<nchannels; ch++){
+
+        if( allChargeHist[board][ch]->getNbOfDataPoints() == 0 )
+          continue;
+        cout <<" .. fitting board "<<board<<", ch "<<ch<<endl;
+
+        allChargeHist[board][ch]->fitGainCurve(gainfile );
+      }
+    }
+    gainfile->Close();
+  }//end dofit
+
+  cout<<"Success, exiting ..."<<endl;
+  //exit(0);
+  return 0;
+}

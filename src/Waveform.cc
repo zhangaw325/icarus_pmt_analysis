@@ -201,10 +201,20 @@ void Waveform::ComputePulseCharacteristics(){
   CountingPulses();
 }
 
+void Waveform::ComputePulseTime_Laser(){
+  // convert the waveform in time 
+  // and invert so I have a positive pulse
+  
+}
+
 //------------------------------------------------------------------------------
 void Waveform::CountingPulses(){
   // to be developped
   // ideally we want to save time, amplitude, charge of each pulse in a waveform
+  m_pulseChargeVec.resize(0); // store each pulse's charge
+  m_pulseTimeVec.resize(0);   // store each pulse's start time
+  m_pulseAmpVec.resize(0);    // store each pulse's amplitude
+  m_pulseWidthVec.resize(0);  // store each pulse's width  
   m_npulse = 1;
 }
 

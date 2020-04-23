@@ -30,6 +30,9 @@ class Waveform
       typedef vector<complex<double>> Complex_t;
 
       Waveform();
+      Waveform(int run, int subrun, int event ,int board, int channel);
+      Waveform( int run, int subrun, int event ,int board, int channel,
+                                                     Rawdigits_t raw_waveform );
       Waveform(int run, int subrun, int event ,int board, int channel, double n_sigma);
       Waveform( int run, int subrun, int event ,int board, int channel, double n_sigma,
                                                      Rawdigits_t raw_waveform );
@@ -101,9 +104,14 @@ class Waveform
       double m_width=0.0; // pulse width
       double m_amplitude=0.0; // amplitude in ADC count
       double m_integral=0.0;  // charge in unit?
-      int m_npulse = 0;
       //double m_charge=0.0;
       double m_nsigma=0;
+
+      int m_npulse = 0;  // number of pulses in a waveform, >=0
+      vector<double> m_pulseChargeVec; // store each pulse's charge
+      vector<double> m_pulseTimeVec;   // store each pulse's start time
+      vector<double> m_pulseAmpVec;    // store each pulse's amplitude
+      vector<double> m_pulseWidthVec;  // store each pulse's width
 
 
 };

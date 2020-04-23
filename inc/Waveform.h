@@ -44,6 +44,7 @@ class Waveform
       void BaselineSubtraction();
       void ComputePulseCharacteristics();
       void CountingPulses();
+      void ComputePulseTime_Laser(); // compute the pulse time from laser light
 
       // Getters
       int getRun(){ return m_run; }
@@ -104,9 +105,14 @@ class Waveform
       double m_width=0.0; // pulse width
       double m_amplitude=0.0; // amplitude in ADC count
       double m_integral=0.0;  // charge in unit?
-      int m_npulse = 0;
       //double m_charge=0.0;
       double m_nsigma=0;
+
+      int m_npulse = 0;  // number of pulses in a waveform, >=0
+      vector<double> m_pulseChargeVec; // store each pulse's charge
+      vector<double> m_pulseTimeVec;   // store each pulse's start time
+      vector<double> m_pulseAmpVec;    // store each pulse's amplitude
+      vector<double> m_pulseWidthVec;  // store each pulse's width
 
 
 };

@@ -62,9 +62,9 @@ void Waveform::loadData( Rawdigits_t raw_waveform )
   m_raw_waveform = raw_waveform;
   for( double w : raw_waveform ){ m_waveform.push_back( double(w) ); }
   BaselineSubtraction();
-  if(hasPulse(m_nsigma)){
+  //if(hasPulse(m_nsigma)){
     ComputePulseCharacteristics();
-  }
+  //}
 };
 
 //------------------------------------------------------------------------------
@@ -201,10 +201,17 @@ void Waveform::ComputePulseCharacteristics(){
   CountingPulses();
 }
 
+void Waveform::ComputePulseTime_Laser(){
+}
+
 //------------------------------------------------------------------------------
 void Waveform::CountingPulses(){
   // to be developped
   // ideally we want to save time, amplitude, charge of each pulse in a waveform
+  m_pulseChargeVec.resize(0); // store each pulse's charge
+  m_pulseTimeVec.resize(0);   // store each pulse's start time
+  m_pulseAmpVec.resize(0);    // store each pulse's amplitude
+  m_pulseWidthVec.resize(0);  // store each pulse's width  
   m_npulse = 1;
 }
 
