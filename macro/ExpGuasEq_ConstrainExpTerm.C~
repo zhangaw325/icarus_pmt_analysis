@@ -1,0 +1,91 @@
+double ResponseWithPedestal_expGaus_constrainNpe(double npe,
+                                      double Q1, double w1, double a1,            
+                                      double Q2, double w2, double a2,
+                                      double Q3, double w3, double a3,
+                                      double pedm1, double pedw1, double pedamp1, double pedtau1,
+                                      double pedm2, double pedw2, double pedamp2, double pedtau2,
+                                      double pedm3, double pedw3, double pedamp3, double pedtau3)
+{
+  //cout<<"idealResponse is called ..."<<endl;
+  const int npoints = (int) ds.ghist.size(); //3;//this->getNbOfDataPoints();
+  //cout<<"check "<<global_hist.size()<<endl;
+  if(npoints==0) {cout<<"fitting no data in CaliGainNovData:myfcn"<<endl; exit(0);}
+
+  // I have these parameters:
+  //double npe = mu; // mean npe
+  double q[npoints]; q[0]=Q1; q[1]=Q2; q[2]=Q3;
+  double sigma[npoints]; sigma[0]=w1; sigma[1]=w2; sigma[2]=w3;
+  double amp[npoints]; amp[0]=a1; amp[1]=a2; amp[2]=a3;
+  double q0[npoints]; q0[0]=pedm1; q0[1]=pedm2; q0[2]=pedm3; 
+  double w0[npoints]; w0[0]=pedw1; w0[1]=pedw2; w0[2]=pedw3;
+  double a0[npoints]; a0[0]=pedamp1; a0[1]=pedamp2; a0[2]=pedamp3;
+  double tau0[npoints]; tau0[0]=pedtau1; tau0[1]=pedtau2; tau0[2]=pedtau3;
+
+  // compute the chi2
+  int ndf=0;
+  double chi2[3]; 
+  for(int i=0; i<npoints; i++){
+    chi2[i]=0.0;
+    int nbins = (int)ds.ghist[i]->GetNbinsX();//200;
+
+    for(int j=0; j<nbins-1; j++){
+      double x = ds.ghist[i]->GetBinCenter(j+1);
+      double y = ds.ghist[i]->GetBinContent(j+1);
+      double prediction = 0;
+
+      // ideal response term
+      double p2 = 0;
+      for(int k=1;k<100;k++){
+          p2 +=    (TMath::Power(npe,k)*TMath::Exp(-1.0*npe)/TMath::Factorial(k)
+            *TMath::Exp(-1.0*(x-q[i]*k)*(x-q[i]*k) 
+              /(2.0*k*sigma[i]*sigma[i]))/(sigma[i]*TMath::Sqrt(2.0*TMath::Pi()*k)) ) ;
+      }
+
+      prediction = (p2*amp[i] 
+                         + a0[i]*w0[i]/tau0[i]*TMath::Sqrt(TMath::Pi()/2.0)
+                           *TMath::Exp(0.5*(w0[i]*w0[i])/(tau0[i]*tau0[i])-(x-q0[i])/tau0[i])
+                           *TMath::Erfc(TMath::Sqrt(1./2.)*(w0[i]/tau0[i]-(x-q0[i])/w0[i])) ) *TMath::Exp(-1.0*npe);
+
+      if(y!=0){
+        chi2[i] += TMath::Power( y-prediction , 2)/y; // the chi2 function
+        ndf++;
+      }
+    }
+  }
+
+  ds.ndf=ndf;
+  return chi2[0]+chi2[1]+chi2[2];
+
+}
+
+
+void myfcnWithPedestal_expGaus_constrainNpe(int &npar, double * deriv, double &f, double * par, int iflag){
+  f = ResponseWithPedestal_expGaus_constrainNpe(par[0], par[1], par[2], par[3], par[4], par[5], par[6], par[7], par[8], par[9], par[10], par[11], par[12], par[13], par[14], par[15], par[16], par[17], par[18], par[19], par[20], par[21]);
+}
+
+double myChargeFunc_expGaus_constrainNpe (double* x, double * par){
+      //function implementation using class data members
+      double mu = par[0];
+      double q = par[1];
+      double sigma = par[2];
+      double amplitude = par[3];
+      double sum=0;
+      for(int n=1; n<100; n++){
+        sum += amplitude* (TMath::Power(mu,n)*TMath::Exp(-1.0*mu)/TMath::Factorial(n)
+                *TMath::Exp(-1.0*(x[0]-q*n)*(x[0]-q*n)
+                  /(2.0*n*sigma*sigma))/(sigma*TMath::Sqrt(2.0*TMath::Pi()*n))) ;
+                       
+      }
+
+       // add the exponentially modified guassian function:
+     // https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
+     // par[6]: amplitude
+     // par[4]: mean
+     // par[5]: sigma
+     // par[7]: exponent time (I use the alternative form)
+
+     sum = sum + par[6]*par[5]/par[7]*TMath::Sqrt(TMath::Pi()/2.0)*TMath::Exp(0.5*(par[5]*par[5])/(par[7]*par[7])-(x[0]-par[4])/par[7])*TMath::Erfc(TMath::Sqrt(1./2.)*(par[5]/par[7]-(x[0]-par[4])/par[5]));
+
+      return sum*TMath::Exp(-1.0*mu) ;
+}
+

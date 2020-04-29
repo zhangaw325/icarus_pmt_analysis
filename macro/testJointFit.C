@@ -1,3 +1,4 @@
+
 struct ds_global {
   vector<TH1D*> ghist;
   vector<double> gv;
@@ -8,31 +9,10 @@ struct ds_global {
   int ndf=0;
 } ds;
 
-double myGausPDF(double x, double mean, double sigma){
-  // test output
-  double value = 1.0/TMath::Sqrt(2.0*TMath::Pi()*sigma*sigma)*TMath::Exp(-1.0/2.0*TMath::Power( (x-mean)/sigma ,2));
+#include "pdf_distributions.cc"
+#include "reducedMilindEquation.cc"
+#include "ExpGuasEq_ConstrainExpTerm.C"
 
-  //if( TMath::IsNaN(value) ){
-  //  cout<<"nan in myGausPDF"<<endl;
-  //  cout<<x<<"\t"<<mean<<"\t"<<sigma<<endl;
-  //}
-
-  return value;
-}
-
-double myExpGausPDF(double x, double mean, double sigma, double c0){
-  double value = sigma/c0 * TMath::Sqrt(TMath::Pi()/2.0)
-         * TMath::Exp( 1./2.*(sigma/c0)*(sigma/c0)- (x-mean)/c0 )
-         * TMath::Erfc( 1./TMath::Sqrt(2.) * (sigma/c0 - (x-mean)/sigma) );
-  // test output
-  //if( TMath::IsNaN(value) ){
-  //  cout<<"nan in myExpGausPDF"<<endl;
-  //  cout<<x<<"\t"<<mean<<"\t"<<sigma<<"\t"<<c0<<endl;
-  //}
-  return value;
-  //return c0*0.5*TMath::Exp(0.5*c0*(2.0*mean+c0*sigma*sigma-2.0*x))
-  //       * TMath::Erfc( (mean+c0*sigma*sigma-x)/sigma/1.414);
-}
 
 double mygainResponse(double p0,
                                        double p1, double p2, double p3, double p4, double p5, double p6, double p7,
@@ -542,11 +522,21 @@ void testJointFit(){
   TFile* f3 = new TFile("Result_run217_charge.root","read");
   TH1D* h3 = (TH1D*)f3->Get("ChargeDir/hLowQ_run217_board0_ch7");
 
+/*
+  TFile* f1 = new TFile("../buildir/Result_run238_charge.root","read");
+  TH1D* h1 = (TH1D*)f1->Get("ChargeDir/hLowQ_run238_board0_ch14");
+  TFile* f2 = new TFile("../buildir/Result_run240_charge.root","read");
+  TH1D* h2 = (TH1D*)f2->Get("ChargeDir/hLowQ_run240_board0_ch14");
+  TFile* f3 = new TFile("../buildir/Result_run242_charge.root","read");
+  TH1D* h3 = (TH1D*)f3->Get("ChargeDir/hLowQ_run242_board0_ch14");
+*/
   ds.ghist.push_back(h1);
   ds.ghist.push_back(h2);
   ds.ghist.push_back(h3);
 
   //fitWithMilindEq();
+  //fitWithMilindEqReduced();
 
-  fitWithNormalExpGausBkg();
+  //fitWithNormalExpGausBkg();
+  fitWithNormalExpGausBkg_constrainNpe();
 }
