@@ -6,6 +6,9 @@
 
 #include "Waveform.h"
 
+#include "PulseShapeFunction.h"
+#include "TF1.h"
+
 //------------------------------------------------------------------------------
 
 Waveform::Waveform(){};
@@ -173,6 +176,8 @@ bool Waveform::hasPulse( double n_sigma )
 
   // Here we define the characteristics of the pulse
 
+  //cout<<m_start_time<<endl;
+
   return has_pulse;
 };
 
@@ -201,10 +206,143 @@ void Waveform::ComputePulseCharacteristics(){
   CountingPulses();
 }
 
-void Waveform::ComputePulseTime_Laser(){
+// -- fit pulse shape using the LogNormal function
+// not correct yet
+void Waveform::FitPulseTime_LogNormalFunc(){
   // convert the waveform in time 
   // and invert so I have a positive pulse
-  
+  if(!hasPulse(m_nsigma)){
+    cout<<"no pulse, skip .. "<<endl;
+  }
+  TH1D* hwave = getWaveformHistInverted();
+
+  PulseShapeFunction_LogNormal func_LogNormal_obj;
+  TF1* func1 = new TF1("exp_mod_LogNormal",func_LogNormal_obj,0,10000,5);
+  func1->SetParNames("t0","mu","w","a","baseline");
+  double t_peak = 2.0*hwave->GetMaximumBin();
+  double t1 = t_peak - 5;
+  //cout<<t_peak<<"\t"<<hwave->Integral( (t_peak-10)/2,(t_peak+20)/2)<<endl;
+  func1->SetParameters(t_peak-5, 2, 1.0, 2.0*hwave->Integral( (t_peak-10)/2, (t_peak+20)/2 ), 0);
+  hwave->Fit("exp_mod_LogNormal","RQ","",t_peak-15,t_peak+25);
+  double par[4];
+  for(int k=0; k<2; k++){
+  for(int i=0; i<4; i++)
+    {
+      par[i] = func1->GetParameter(i);
+      func1->SetParameter(i,par[i]);
+    }
+    hwave->Fit("exp_mod_LogNormal","RQ","",t_peak-15,t_peak+25);
+  }
+  //cout<<func1->GetChisquare()<<"\t"<<endl;
+  hwave->GetXaxis()->SetRangeUser(420,520);
+
+  m_pulse_shape_fit_chi2 = func1->GetChisquare();
+  m_pulse_shape_fit_ndf = func1->GetNDF();
+  m_pulse_shape_time = func1->GetParameter(0);
+  m_pulse_shape_time_uncer = func1->GetParError(0);
+  m_pulse_shape_w = func1->GetParameter(1);
+  m_pulse_shape_w_uncer = func1->GetParError(1);
+  m_pulse_shape_c = func1->GetParameter(2);
+  m_pulse_shape_c_uncer = func1->GetParError(2);
+  m_pulse_shape_a = func1->GetParameter(3);
+  m_pulse_shape_a_uncer = func1->GetParError(3);
+
+}
+
+// -- fit pulse shape using the two exponential terms
+void Waveform::FitPulseTime_TwoExpoentials(TFile* ofile){
+  // convert the waveform in time 
+  // and invert so I have a positive pulse
+  if(!hasPulse(m_nsigma)){
+    cout<<"no pulse, skip .. "<<endl;
+  }
+  TH1D* hwave = getWaveformHistInverted();
+
+  PulseShapeFunction_TwoExpoentials func_obj;
+  TF1* func1 = new TF1("pulse_func",func_obj,0,10000,5);
+  func1->SetParNames("t0","#tau","#tau_{S}","a","baseline");
+  double t_peak = 2.0*hwave->GetMaximumBin();
+  double t1 = t_peak - 5;
+  //cout<<t_peak<<"\t"<<hwave->Integral( (t_peak-10)/2,(t_peak+20)/2)<<endl;
+  func1->SetParameters(t_peak-5, 3, 7, 2.0*hwave->Integral( (t_peak-10)/2, (t_peak+20)/2 ), 0);
+  hwave->Fit("pulse_func","RQ","",t_peak-15,t_peak+25);
+  double par[5];
+  for(int k=0; k<2; k++){
+  for(int i=0; i<5; i++)
+    {
+      par[i] = func1->GetParameter(i);
+      func1->SetParameter(i,par[i]);
+    }
+    hwave->Fit("pulse_func","RQ","",t_peak-15,t_peak+25);
+  }
+  //cout<<func1->GetChisquare()<<"\t"<<endl;
+  hwave->GetXaxis()->SetRangeUser(420,520);
+  //ofile->cd();
+  //hwave->Write();
+
+  /*
+  char name[60]; sprintf(name,"waveform_fit_twoExp/%s.png",hwave->GetName());
+  TCanvas* c = new TCanvas();
+  hwave->Draw();
+  c->SaveAs(name);
+  c->Close();
+  */
+
+  m_pulse_shape_fit_chi2 = func1->GetChisquare();
+  m_pulse_shape_fit_ndf = func1->GetNDF();
+  m_pulse_shape_time = func1->GetParameter(0);
+  m_pulse_shape_time_uncer = func1->GetParError(0);
+  // the parameters below are not correct for the moment,
+  // and they are not used yet.
+  m_pulse_shape_w = func1->GetParameter(1);
+  m_pulse_shape_w_uncer = func1->GetParError(1);
+  m_pulse_shape_c = func1->GetParameter(2);
+  m_pulse_shape_c_uncer = func1->GetParError(2);
+  m_pulse_shape_a = func1->GetParameter(3);
+  m_pulse_shape_a_uncer = func1->GetParError(3);
+
+}
+
+// -- fit pulse shape using the exp-Gaus function
+void Waveform::FitPulseTime_Laser(){
+  // convert the waveform in time 
+  // and invert so I have a positive pulse
+  if(!hasPulse(m_nsigma)){
+    cout<<"no pulse, skip .. "<<endl;
+  }
+  TH1D* hwave = getWaveformHistInverted();
+
+  PulseShapeFunction_ExpGaus func_expGaus_obj;
+  TF1* func1 = new TF1("exp_mod_Gaus",func_expGaus_obj,0,10000,4);
+  func1->SetParNames("t0","w","c","a");
+  double t_peak = 2.0*hwave->GetMaximumBin();
+  double t1 = t_peak - 5;
+  //cout<<t_peak<<"\t"<<hwave->Integral( (t_peak-10)/2,(t_peak+20)/2)<<endl;
+  func1->SetParameters(t_peak-5, 2, 0.1, 2.0*hwave->Integral( (t_peak-10)/2, (t_peak+20)/2 ));
+  hwave->Fit("exp_mod_Gaus","RQ","",t_peak-15,t_peak+25);
+  double par[4];
+  for(int k=0; k<2; k++){
+  for(int i=0; i<4; i++)
+    {
+      par[i] = func1->GetParameter(i);
+      func1->SetParameter(i,par[i]);
+    }
+    hwave->Fit("exp_mod_Gaus","RQ","",t_peak-15,t_peak+25);
+  }
+  //cout<<func1->GetChisquare()<<"\t"<<endl;
+  hwave->GetXaxis()->SetRangeUser(420,520);
+
+  m_pulse_shape_fit_chi2 = func1->GetChisquare();
+  m_pulse_shape_fit_ndf = func1->GetNDF();
+  m_pulse_shape_time = func1->GetParameter(0);
+  m_pulse_shape_time_uncer = func1->GetParError(0);
+  m_pulse_shape_w = func1->GetParameter(1);
+  m_pulse_shape_w_uncer = func1->GetParError(1);
+  m_pulse_shape_c = func1->GetParameter(2);
+  m_pulse_shape_c_uncer = func1->GetParError(2);
+  m_pulse_shape_a = func1->GetParameter(3);
+  m_pulse_shape_a_uncer = func1->GetParError(3);
+
 }
 
 //------------------------------------------------------------------------------
@@ -277,7 +415,7 @@ TH1D* Waveform::getPowerSpectrum()
 TH1D* Waveform::getWaveformHist()
 {
   char hname[100];
-  sprintf(hname, "Run%d-Subrun%d-Event%d-Board%d-Channel%d_hist", m_run,
+  sprintf(hname, "Run%d-Subrun%d-Evt%d-Bd%d-Ch%d_hist", m_run,
                                          m_subrun, m_event, m_board, m_channel);
 
   TH1D *hist = new TH1D(hname, ";Time (ns);ADC", m_nsamples,
@@ -291,10 +429,29 @@ TH1D* Waveform::getWaveformHist()
 
 //------------------------------------------------------------------------------
 
+TH1D* Waveform::getWaveformHistInverted()
+{
+  char hname[100];
+  sprintf(hname, "Run%d-Subrun%d-Evt%d-Bd%d-Ch%d_hist", m_run,
+                                         m_subrun, m_event, m_board, m_channel);
+
+  TH1D *hist = new TH1D(hname, ";Time (ns);ADC", m_nsamples,
+                                               0, m_nsamples*m_sampling_period);
+
+  for(int t=0; t<m_nsamples; t++){ 
+      //hist->Fill( t*m_sampling_period, -1.0*m_waveform.at(t) );
+    hist->SetBinContent( t+1, -1.0*m_waveform.at(t) );  
+  }
+
+  return hist;
+};
+
+//------------------------------------------------------------------------------
+
 TH1D* Waveform::getRawWaveformHist()
 {
   char hname[100];
-  sprintf(hname, "Run%d-Subrun%d-Event%d-Board%d-Channel%d_raw_hist", m_run,
+  sprintf(hname, "Run%d-Subrun%d-Evt%d-Bd%d-Ch%d_raw_hist", m_run,
                                          m_subrun, m_event, m_board, m_channel);
 
   TH1D *hist = new TH1D(hname, ";Time [ns];ADC", m_nsamples,

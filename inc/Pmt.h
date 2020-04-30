@@ -33,6 +33,7 @@ class PMT
 
     // Loaders
     void loadWaveform( Waveform *waveform );
+    void FillPulseTimeFromFit(Waveform* waveform);
 
     // Getters
     int getRun(){ return m_run; };
@@ -81,6 +82,8 @@ class PMT
     TH1D* h_pulsepeaktime; //peak time of pulse
     TH1D* h_pulsewidth; // width of pulse
     TH1I* h_NbOfPulse; // number of pulses in a waveform
+
+    TH1D* h_pulsetime_fromfit;
 
 };
 

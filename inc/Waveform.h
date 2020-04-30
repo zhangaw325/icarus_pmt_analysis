@@ -17,6 +17,8 @@
 #include <complex>
 
 #include "TH1D.h"
+#include "TFile.h"
+#include "TCanvas.h"
 
 using namespace std;
 
@@ -44,7 +46,9 @@ class Waveform
       void BaselineSubtraction();
       void ComputePulseCharacteristics();
       void CountingPulses();
-      void ComputePulseTime_Laser(); // compute the pulse time from laser light
+      void FitPulseTime_Laser(); // compute the pulse time from laser light
+      void FitPulseTime_LogNormalFunc();
+      void FitPulseTime_TwoExpoentials(TFile* ofile); // the equation with two exponentials
 
       // Getters
       int getRun(){ return m_run; }
@@ -60,6 +64,8 @@ class Waveform
       double getAmplitude(){ return m_amplitude; }
       double getCharge(){ return m_integral; }
       int getNPulses() {return m_npulse; }
+
+      double GetPulseTimeFromFit(){return m_pulse_shape_time;}
 
       Rawdigits_t getRawWaveform(){ return m_raw_waveform; };
       Waveform_t getWaveform(){ return m_waveform; };
@@ -79,6 +85,7 @@ class Waveform
       bool find(int run, int subrun, int event, int board, int channel );
       TH1D* getRawWaveformHist();
       TH1D* getWaveformHist();
+      TH1D* getWaveformHistInverted(); // so this is waveform in positive values
       TH1D* getPowerSpectrum();
 
     private:
@@ -107,6 +114,20 @@ class Waveform
       double m_integral=0.0;  // charge in unit?
       //double m_charge=0.0;
       double m_nsigma=0;
+
+      // parameters related with pulse shape fitting
+      // the fit function is expGaus
+      // this is only about laser light pulse fit
+      double m_pulse_shape_fit_chi2;
+      double m_pulse_shape_fit_ndf;
+      double m_pulse_shape_time;
+      double m_pulse_shape_time_uncer;
+      double m_pulse_shape_w;
+      double m_pulse_shape_w_uncer;
+      double m_pulse_shape_c;
+      double m_pulse_shape_c_uncer;
+      double m_pulse_shape_a;
+      double m_pulse_shape_a_uncer;
 
       int m_npulse = 0;  // number of pulses in a waveform, >=0
       vector<double> m_pulseChargeVec; // store each pulse's charge

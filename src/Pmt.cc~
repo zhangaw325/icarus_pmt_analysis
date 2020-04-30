@@ -67,12 +67,12 @@ void PMT::initHist()
 
   // for charge histograms
   sprintf(hname, "hQ_run%d_board%d_ch%d", m_run , m_board, m_channel);
-  h_charge = new TH1D(hname, hname, 1000,-5,95);
+  h_charge = new TH1D(hname, hname, 500,-5,95);
   h_charge->SetXTitle("Charge (pC)");
   h_charge->SetYTitle("Counts");
   // for charge histograms for the small charge case
   sprintf(hname, "hLowQ_run%d_board%d_ch%d", m_run , m_board, m_channel);
-  h_charge_small = new TH1D(hname, hname, 500,-5,45);
+  h_charge_small = new TH1D(hname, hname, 1000,-5,45);
   h_charge_small->SetXTitle("Charge (pC)");
   h_charge_small->SetYTitle("Counts");
   // for charge histograms for the small charge case, finest bin
@@ -89,7 +89,7 @@ void PMT::initHist()
   h_pulsetime->SetYTitle("Counts");
   sprintf(hname, "hPulsePeakTime_run%d_board%d_ch%d", m_run, m_board, m_channel);
   h_pulsepeaktime = new TH1D(hname, hname, 200,-1,-1);//try to autobin
-  h_pulsepeaktime->SetXTitle("Pulse start time (bin)");
+  h_pulsepeaktime->SetXTitle("Pulse peak time (bin)");
   h_pulsepeaktime->SetYTitle("Counts");
   sprintf(hname, "hPulseWidth_run%d_board%d_ch%d", m_run, m_board, m_channel);
   h_pulsewidth = new TH1D(hname, hname, 100,-0.5,99.5);
@@ -100,6 +100,12 @@ void PMT::initHist()
   h_NbOfPulse = new TH1I(hname, hname, 15,0,15);
   h_NbOfPulse->SetXTitle("Number of pulses in the time set window");
   h_NbOfPulse->SetYTitle("Counts");
+  
+  // Pulse time from fitting the pulse due to light
+  sprintf(hname, "hFittedPulseTime_run%d_bd%d_ch%d", m_run, m_board, m_channel);
+  h_pulsetime_fromfit = new TH1D(hname, hname, 100,400,500);
+  h_pulsetime_fromfit->SetXTitle("Pulse time from fit (ns)");
+  h_pulsetime_fromfit->SetYTitle("Counts");
   
 };
 
@@ -163,6 +169,11 @@ void PMT::loadWaveform( Waveform *waveform )
   // m_amplitude_array.push_back(amplitude);
 
 };
+
+void PMT::FillPulseTimeFromFit(Waveform* waveform){
+  double pulsetimefromfit = waveform->GetPulseTimeFromFit();
+  h_pulsetime_fromfit -> Fill(pulsetimefromfit);
+}
 
 //------------------------------------------------------------------------------
 /*
@@ -240,6 +251,8 @@ void PMT::writeHist(TFile* thefile, TDirectory* ampDir, TDirectory* chargeDir, T
   timeDir->cd();
   h_pulsetime->Write();
   h_pulsepeaktime->Write();
+
+  h_pulsetime_fromfit->Write();
 
 };
 

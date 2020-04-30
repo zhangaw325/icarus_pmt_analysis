@@ -34,20 +34,26 @@ class CaliGainNovData
 
     void fitGainCurve(TFile* ofile);
     void fitHighCharge();
+    void fitHighCharge_improve();
     //void fitLowCharge();
     void fitLowCharge_fullExpr();
+    void fitLowCharge_fullExpr_Single();
     void fitLowCharge_expGaus();
     //void fitChargeDistributions();
     //void plotGainCurve(TFile* ofile, bool flag);
     void plotGainCurveHighCharge(TFile* ofile, bool flag);
+    void plotGainCurveHighCharge_improve(TFile* ofile, bool flag);
     void plotGainCurveLowCharge(TFile* ofile, bool flag);
     void plotGainCurveLowCharge_expGaus(TFile* ofile, bool flag);
     void initializeParVectors(int npars);
-    void SaveJointFitParameters();
+    void SaveJointFitParameters(bool flag);
 
     //void myfcn(int &npar, double * deriv, double &f, double * par, int iflag);
     static void myfcn(int &npar, double * deriv, double &f, double * par, int iflag);
     double idealResponse(double mu, double Q1, double w1, double a1, double Q2, double w2, double a2, double Q3, double w3, double a3);
+
+    static void myfcn_improve(int &npar, double * deriv, double &f, double * par, int iflag);
+    double idealResponse_improve(double mu, double Q1, double w1, double a1, double Q2, double w2, double a2, double Q3, double w3, double a3);
 
     //static void myfcnWithPedestal(int &npar, double * deriv, double &f, double * par, int iflag);
     //double ResponseWithPedestal(double npe,
@@ -66,6 +72,17 @@ class CaliGainNovData
                                       double pedm1, double pedw1, double pedamp1, double pedtau1,
                                       double pedm2, double pedw2, double pedamp2, double pedtau2,
                                       double pedm3, double pedw3, double pedamp3, double pedtau3 );
+
+    void fitLowCharge_expGaus_improve();
+    void plotGainCurveLowCharge_expGaus_improve(TFile* ofile, bool flag);
+    double ResponseWithPedestal_expGaus_improve(double npe,
+                                      double Q1, double w1, double a1,            
+                                      double Q2, double w2, double a2,
+                                      double Q3, double w3, double a3,
+                                      double pedm1, double pedw1, double pedamp1, double pedtau1,
+                                      double pedm2, double pedw2, double pedamp2, double pedtau2,
+                                      double pedm3, double pedw3, double pedamp3, double pedtau3 );
+    static void myfcnWithPedestal_expGaus_improve(int &npar, double * deriv, double &f, double * par, int iflag);
 
     // these two are my final charge distribution fitting function.
     // this is based on 3 voltage data points;
