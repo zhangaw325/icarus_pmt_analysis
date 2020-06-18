@@ -15,6 +15,7 @@
 #include "Geometry.h"
 #include "Waveform.h"
 #include "TH1D.h"
+#include "TH2D.h"
 #include "TH1I.h"
 #include "TFile.h"
 #include "TDirectory.h"
@@ -34,6 +35,7 @@ class PMT
     // Loaders
     void loadWaveform( Waveform *waveform );
     void FillPulseTimeFromFit(Waveform* waveform);
+    void Fill2DHist(Waveform* waveform);
 
     // Getters
     int getRun(){ return m_run; };
@@ -84,6 +86,9 @@ class PMT
     TH1I* h_NbOfPulse; // number of pulses in a waveform
 
     TH1D* h_pulsetime_fromfit;
+
+    TH2D* h_charge_vs_pulsetime;
+    TH2D* h_amp_vs_pulsetime;
 
 };
 

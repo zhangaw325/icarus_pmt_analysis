@@ -45,7 +45,7 @@ class Waveform
       // process a raw waveform
       void BaselineSubtraction();
       void ComputePulseCharacteristics();
-      void CountingPulses();
+      void CountingPulses(TFile* ofile);
       void FitPulseTime_Laser(); // compute the pulse time from laser light
       void FitPulseTime_LogNormalFunc();
       void FitPulseTime_TwoExpoentials(TFile* ofile); // the equation with two exponentials
@@ -134,6 +134,7 @@ class Waveform
       vector<double> m_pulseTimeVec;   // store each pulse's start time
       vector<double> m_pulseAmpVec;    // store each pulse's amplitude
       vector<double> m_pulseWidthVec;  // store each pulse's width
+      vector<double> m_peakX; // store pulse's x-position in bins
 
 
 };

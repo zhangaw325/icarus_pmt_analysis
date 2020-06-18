@@ -8,6 +8,9 @@
 
 #include "PulseShapeFunction.h"
 #include "TF1.h"
+#include "TSpectrum.h"
+#include "TPolyMarker.h"
+#include "TCanvas.h"
 
 //------------------------------------------------------------------------------
 
@@ -75,7 +78,7 @@ void Waveform::loadData( Rawdigits_t raw_waveform )
 void Waveform::BaselineSubtraction()
 {
   // Calculate the baseline as the mean values on the first part of the spectrum
-  n_sample_baseline = m_nsamples;
+  // n_sample_baseline = m_nsamples;
 
   for(int t=0; t<n_sample_baseline; t++)
   {
@@ -199,11 +202,11 @@ void Waveform::ComputePulseCharacteristics(){
   }
 
   m_width = (m_end_time-m_start_time);
-  m_amplitude = amp;
+  m_amplitude = -0.122*amp; // convert to mV and inverse to get positive number
   m_integral = -1.0*charge * 0.122*2.0*0.02; // the Q converting factor
 
   // we count for number of pulses in a separate function
-  CountingPulses();
+  //CountingPulses();
 }
 
 // -- fit pulse shape using the LogNormal function
@@ -342,18 +345,80 @@ void Waveform::FitPulseTime_Laser(){
   m_pulse_shape_c_uncer = func1->GetParError(2);
   m_pulse_shape_a = func1->GetParameter(3);
   m_pulse_shape_a_uncer = func1->GetParError(3);
-
+  //cout<< func1->GetMaximum()<<"\t"<<func1->GetMaximumX()<<"\t"<<func1->GetX( 0.1*func1->GetMaximum(), 400, m_pulse_shape_time )<<endl;
+  //if(m_pulse_shape_time>550) cout<<"not a good fit "<<endl;
+  //m_pulse_shape_time = func1->GetX( 0.1*func1->GetMaximum(), 400, m_pulse_shape_time  );
 }
 
 //------------------------------------------------------------------------------
-void Waveform::CountingPulses(){
+void Waveform::CountingPulses(TFile* ofile){
   // to be developped
   // ideally we want to save time, amplitude, charge of each pulse in a waveform
   m_pulseChargeVec.resize(0); // store each pulse's charge
   m_pulseTimeVec.resize(0);   // store each pulse's start time
   m_pulseAmpVec.resize(0);    // store each pulse's amplitude
   m_pulseWidthVec.resize(0);  // store each pulse's width  
-  m_npulse = 1;
+  m_npulse = 0;
+  m_peakX.resize(0);
+
+  TH1D* hwave = getWaveformHistInverted();
+  hwave->SetXTitle("sample bins");
+  double threshold =  baseline_width*m_nsigma;
+  char title[100];
+  sprintf(title, "%s threshold %.2f", hwave->GetName(), threshold);
+  hwave->SetTitle(title);
+
+  TSpectrum* aspec = new TSpectrum();
+
+  if(hwave->GetMaximum() > threshold){
+      double sigma = 5.0;
+      int n = aspec->Search(hwave, sigma, "",  threshold*3.0/5.0/hwave->GetMaximum());
+      m_npulse = aspec->GetNPeaks();
+      double* peakX = aspec->GetPositionX();
+      double* peakY = aspec->GetPositionY();
+      TList *functions = hwave->GetListOfFunctions();
+      //TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker");
+      TPolyMarker* pm = new TPolyMarker();
+      pm->SetMarkerColor(4);
+      pm->SetMarkerStyle(8);
+      functions->Add(pm);
+      //cout<<"pulse finding "<<title<<"\t"
+      //    <<hwave->GetMaximum()<<"\t"<<n<<"\t"<<m_npulse<<"..."<<endl;
+      //for(int i=0; i<m_npulse; i++){
+      //    cout<<m_peakX[i]<<"\t";
+      // }
+      //cout<<endl;
+
+      // try to remove those single-bin spikes
+      //double * newVec = new double [0];
+      int newcnt=0;
+      cout<<hwave->GetName()<<"\t"<<m_npulse<<endl;
+      for(int i=0; i<m_npulse; i++){
+          //cout<<i<<"\t"<<m_peakX[i]
+          //    <<"\t"<<hwave->GetBinContent( int(peakX[i]/2) )
+          //    <<"\t"<<hwave->GetBinContent( int(peakX[i]/2+1) )  
+          //    <<"\t"<<hwave->GetBinContent( int(peakX[i]/2+2) )
+          //    <<endl; 
+          if( hwave->GetBinContent( int(peakX[i]/2) ) < threshold
+             && hwave->GetBinContent( int(peakX[i]/2+2) ) < threshold ){
+            pm->SetNextPoint(peakX[i], peakY[i]);
+            //cout<<"remove this pulse"<<endl;
+            continue;
+          }
+          newcnt++;
+          m_peakX.push_back( peakX[i] );
+      }
+      m_npulse = newcnt;
+
+      ofile->cd();
+      hwave->Write();
+  }
+  else{
+    m_npulse = 0;
+  }
+  
+  //ofile->cd();
+  //hwave->Write();
 }
 
 //------------------------------------------------------------------------------

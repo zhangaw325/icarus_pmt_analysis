@@ -106,7 +106,18 @@ void PMT::initHist()
   h_pulsetime_fromfit = new TH1D(hname, hname, 500,400,500);
   h_pulsetime_fromfit->SetXTitle("Pulse time from fit (ns)");
   h_pulsetime_fromfit->SetYTitle("Counts");
-  
+
+  // Pulse charge vs pulse time from fitting the pulse due to light
+  sprintf(hname, "hChargeVsTime_run%d_bd%d_ch%d", m_run, m_board, m_channel);
+  h_charge_vs_pulsetime = new TH2D(hname, hname, 500,400,500, 100,-0.5,99.5);
+  h_charge_vs_pulsetime->SetXTitle("Pulse time from fit (ns)");
+  h_charge_vs_pulsetime->SetYTitle("Pulse charge (pC)");
+
+  // Pulse amp vs pulse time from fitting the pulse due to light
+  sprintf(hname, "hAmpVsTime_run%d_bd%d_ch%d", m_run, m_board, m_channel);
+  h_amp_vs_pulsetime = new TH2D(hname, hname, 500,400,500, 160,-10,310);
+  h_amp_vs_pulsetime->SetXTitle("Pulse time from fit (ns)");
+  h_amp_vs_pulsetime->SetYTitle("Pulse amplitude (mV)");  
 };
 
 //------------------------------------------------------------------------------
@@ -173,6 +184,14 @@ void PMT::loadWaveform( Waveform *waveform )
 void PMT::FillPulseTimeFromFit(Waveform* waveform){
   double pulsetimefromfit = waveform->GetPulseTimeFromFit();
   h_pulsetime_fromfit -> Fill(pulsetimefromfit);
+}
+
+void PMT::Fill2DHist(Waveform* waveform){
+  double pulsetimefromfit = waveform->GetPulseTimeFromFit();
+  double pulsecharge = waveform->getCharge();
+  double pulseamp = waveform->getAmplitude();
+  h_charge_vs_pulsetime -> Fill(pulsetimefromfit, pulsecharge);
+  h_amp_vs_pulsetime -> Fill(pulsetimefromfit, pulseamp);
 }
 
 //------------------------------------------------------------------------------
@@ -253,6 +272,11 @@ void PMT::writeHist(TFile* thefile, TDirectory* ampDir, TDirectory* chargeDir, T
   h_pulsepeaktime->Write();
 
   h_pulsetime_fromfit->Write();
+
+  h_charge_vs_pulsetime->Write();
+  h_amp_vs_pulsetime->Write();
+
+  h_NbOfPulse->Write();
 
 };
 
