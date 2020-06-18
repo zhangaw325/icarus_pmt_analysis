@@ -46,7 +46,8 @@ double func_poissonExpGaus(double * x, double * par){
 
 double func_TwoExpOnExpGaus(double * x, double * par){
   double t0 = par[0];
-  double 
+  //double 
+  return 0;
 }
 
 double func_lognormal(double * x, double * par){
@@ -132,14 +133,21 @@ void FittingPulseExpGaus(TFile* ofile, TH1D* hwave){
     hwave->Fit("exp_mod_Gaus","RQ","",t_peak-15,t_peak+25);
   }
 
+  cout<<func1->GetMaximumX()<<"\t"<<func1->GetMaximum()<<"\t"<<func1->GetMinimum()<<endl;
+  cout<<func1->GetX ( 0.1* func1->GetMaximum(), 400, func1->GetMaximumX() )<<endl;
+
   hwave->GetXaxis()->SetRangeUser(420,520);
-  /*
+  
   char name[50]; sprintf(name,"waveform_fit/%s.png",hwave->GetName());
   TCanvas* c = new TCanvas();
   hwave->Draw();
+  TLine* line = new TLine(func1->GetParameter(0), 0, func1->GetParameter(0), hwave->GetBinContent(t_peak/2));
+  line->Draw("same");
+  line->SetLineColor(4);
+  line->SetLineStyle(2);
   c->SaveAs(name);
   c->Close();
-  */
+ 
   hwave->Write();
 }
 
@@ -211,11 +219,18 @@ void time_ana_v1(string metadatafile="metadata1.txt"){
   */
 
   double pulsetime[nchannels];
+  double pulsecharge[nchannels];
+  double pulseamp[nchannels];
   for(int i=0;i<nchannels;i++){
     pulsetime[i]=0.0;
+    pulsecharge[i]=0.0;
+    pulseamp[i]=0.0;
   }
   const int nDiff = Sum(nchannels);//1+2+3+4;
+  TH2D* hChargeVsAmp[nchannels];
   TH1D* hPulseTimeDiff[nDiff];
+  TH2D* hChargeVsCharge[nDiff];
+  TH2D* hChargeDiffVsTimeDiff[nDiff];
   char name[50];
   //for(int i=0; i<4; i++){
   //  sprintf(name,"hTimeDiff_ch%d_to_ch0",i+1);
@@ -223,12 +238,27 @@ void time_ana_v1(string metadatafile="metadata1.txt"){
   //}
   int seqcnt=0;
   for(int i=0; i<nchannels-1; i++){
+    sprintf(name,"hChargeVsAmp_ch%d",i);
+    hChargeVsAmp[i] = new TH2D(name,name,105,-10,200, 100,-10,90);
+    hChargeVsAmp[i]->SetXTitle("Amplitude (mV)");
+    hChargeVsAmp[i]->SetYTitle("Charge (pC)");
     for(int j=i+1; j<nchannels; j++){
       sprintf(name,"hTimeDiff_ch%d_to_ch%d",j, i);
     
       hPulseTimeDiff[seqcnt] = new TH1D(name,name,200,-10,10);
       hPulseTimeDiff[seqcnt]->SetXTitle("Time difference (ns)");
       hPulseTimeDiff[seqcnt]->SetYTitle("Counts");
+
+      sprintf(name,"hCharge_ch%d_vs_Charge_ch%d",j, i);
+      hChargeVsCharge[seqcnt] = new TH2D(name,name,100,-10,90, 100,-10,90);
+      hChargeVsCharge[seqcnt]->SetXTitle("Charge (pC)");
+      hChargeVsCharge[seqcnt]->SetYTitle("charge (pC)");
+
+      sprintf(name,"hChargeDiff_vs_TimeDiff_ch%d_to_ch%d",j, i);
+      hChargeDiffVsTimeDiff[seqcnt] = new TH2D(name,name,200,-10,10, 200,-50,50);
+      hChargeDiffVsTimeDiff[seqcnt]->SetXTitle("Time diff (ns)");
+      hChargeDiffVsTimeDiff[seqcnt]->SetYTitle("charge diff (pC)");
+
       seqcnt++;
       //cout<<j+i-1<<endl;
     }
@@ -285,7 +315,7 @@ void time_ana_v1(string metadatafile="metadata1.txt"){
         cout << "         evt: " << e << endl;
         subrun++;
       }
-      if(e==10) break;
+      //if(e==10) break;
 
       // WE TAKE THE EVENT
       tchain->GetEvent(e);
@@ -307,15 +337,18 @@ void time_ana_v1(string metadatafile="metadata1.txt"){
           waveform->loadData((*data).at(channel+nchannels*board));
 
           if(waveform->hasPulse(nsigma) ){
-              TH1D* onewave = waveform->getWaveformHistInverted();
-              FittingPulsePoissonExpaus(of_wave, onewave);
+              //TH1D* onewave = waveform->getWaveformHistInverted();
+              //FittingPulsePoissonExpaus(of_wave, onewave);
               // do pulse fitting here
               //FittingPulseExpGaus(of_wave, onewave);
               //FittingPulseLogNormal(of_wave, onewave);
               //waveform->FitPulseTime_Laser();
-              //waveform->FitPulseTime_TwoExpoentials(of_wave);
-              //pulsetime[channel] = waveform->GetPulseTimeFromFit();
+              waveform->FitPulseTime_TwoExpoentials(of_wave);
+              pulsetime[channel] = waveform->GetPulseTimeFromFit();
+              pulsecharge[channel] = waveform->getCharge();
+              pulseamp[channel] = waveform->getAmplitude();
               pmts[board][channel]->FillPulseTimeFromFit(waveform);
+              pmts[board][channel]->Fill2DHist(waveform);
           }
 
           pmts[board][channel]->loadWaveform(waveform);
@@ -329,10 +362,11 @@ void time_ana_v1(string metadatafile="metadata1.txt"){
           {
             h_pmt_rms[board][channel]->Fill( entry ); // this is distribution of baseline
           }
-
-          // this is distribution of mean baseline from waveforms
-          h_pmt_baseline[board][channel]->Fill( waveform->getBaselineMean() ); 
           */
+          // this is distribution of mean baseline from waveforms
+          //h_pmt_baseline[board][channel]->Fill( waveform->getBaselineMean() ); 
+          if(channel==0) cout<<board<<"\t"<<channel<<"\t"<<waveform->getBaselineMean()<<endl;
+          
           delete waveform;
 
         } // channel
@@ -347,8 +381,11 @@ void time_ana_v1(string metadatafile="metadata1.txt"){
       } // boards
       seqcnt = 0;
       for(int ch=0; ch<nchannels-1; ch++) {
+            hChargeVsAmp[ch]->Fill(pulseamp[ch],pulsecharge[ch]);
         for(int j=ch+1; j<nchannels; j++){
             hPulseTimeDiff[seqcnt]->Fill( pulsetime[j] - pulsetime[ch] );
+            hChargeVsCharge[seqcnt]->Fill(pulsecharge[j], pulsecharge[ch]);
+            hChargeDiffVsTimeDiff[seqcnt]->Fill( pulsetime[j] - pulsetime[ch], pulsecharge[j] - pulsecharge[ch]  );
             seqcnt++;
         }
       }
@@ -380,8 +417,11 @@ void time_ana_v1(string metadatafile="metadata1.txt"){
     timeDiffDir->cd();
     seqcnt = 0;
     for(int ch=0; ch<nchannels-1; ch++){
+          hChargeVsAmp[ch]->Write();
       for(int j=ch+1; j<nchannels; j++){
           hPulseTimeDiff[seqcnt]->Write();
+          hChargeVsCharge[seqcnt]->Write();
+          hChargeDiffVsTimeDiff[seqcnt]->Write();
           seqcnt++;
       }
     }
